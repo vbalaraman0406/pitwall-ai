@@ -1,61 +1,49 @@
-"""Race data API routes for Pitwall.ai."""
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
-from data.fastf1_loader import get_event_schedule, get_session_results, get_lap_data, get_telemetry, get_tire_strategy
+"""Race data API routes with comprehensive error handling"""
+from fastapi import APIRouter, HTTPException
+from data.fastf1_loader import get_race_results, get_race_laps, get_schedule
+import logging
 
-router = APIRouter(prefix="/api/races", tags=["races"])
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/race", tags=["race"])
 
-@router.get("/{year}")
-async def list_races(year: int):
+
+@router.get("/schedule/{year}")
+async def race_schedule(year: int):
+    """Get the race schedule for a given year."""
     try:
-        schedule = get_event_schedule(year)
-        events = []
-        for _, row in schedule.iterrows():
-            events.append({"round_number": int(row["RoundNumber"]), "country": str(row.get("Country","")), "location": str(row.get("Location","")), "event_name": str(row.get("OfficialEventName", row.get("EventName",""))), "event_date": str(row.get("EventDate","")) if row.get("EventDate") is not None else None, "event_format": str(row.get("EventFormat",""))})
-        return {"year": year, "total_races": len(events), "events": events}
+        schedule = get_schedule(year)
+        return {"year": year, "schedule": schedule}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching schedule for {year}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load schedule: {str(e)}")
 
-@router.get("/{year}/{round_number}/results")
-async def race_results(year: int, round_number: int, session: str = Query(default="R")):
-    try:
-        results = get_session_results(year, round_number, session)
-        if results.empty:
-            return {"year": year, "round": round_number, "session": session, "results": []}
-        records = results.to_dict(orient="records")
-        for r in records:
-            for k, v in r.items():
-                if hasattr(v, "total_seconds"): r[k] = v.total_seconds()
-        return {"year": year, "round": round_number, "session": session, "results": records}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{year}/{round_number}/laps")
-async def lap_data(year: int, round_number: int, driver: Optional[str] = Query(default=None), session: str = Query(default="R")):
+@router.get("/{year}/{round_num}/results")
+async def race_results(year: int, round_num: int):
+    """Get results for a specific race."""
     try:
-        laps = get_lap_data(year, round_number, session, driver)
-        if laps.empty:
-            return {"year": year, "round": round_number, "laps": []}
-        return {"year": year, "round": round_number, "driver": driver, "total_laps": len(laps), "laps": laps.to_dict(orient="records")}
+        results = get_race_results(year, round_num)
+        return {"year": year, "round": round_num, "results": results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching results for {year} R{round_num}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load race results: {str(e)}")
 
-@router.get("/{year}/{round_number}/telemetry/{driver}")
-async def driver_telemetry(year: int, round_number: int, driver: str, lap: Optional[int] = Query(default=None), session: str = Query(default="R")):
-    try:
-        tel = get_telemetry(year, round_number, driver, session, lap)
-        if tel.empty:
-            return {"year": year, "round": round_number, "driver": driver, "telemetry": []}
-        return {"year": year, "round": round_number, "driver": driver, "lap": lap or "fastest", "data_points": len(tel), "telemetry": tel.to_dict(orient="records")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{year}/{round_number}/strategy")
-async def tire_strategy(year: int, round_number: int, session: str = Query(default="R")):
+@router.get("/{year}/{round_num}/laps")
+async def race_laps(year: int, round_num: int):
+    """Get lap data for a specific race with ValueError protection."""
     try:
-        strategy = get_tire_strategy(year, round_number, session)
-        if strategy.empty:
-            return {"year": year, "round": round_number, "strategy": []}
-        return {"year": year, "round": round_number, "total_stints": len(strategy), "strategy": strategy.to_dict(orient="records")}
+        laps = get_race_laps(year, round_num)
+        return {"year": year, "round": round_num, "laps": laps}
+    except ValueError as e:
+        logger.error(f"ValueError loading laps for {year} R{round_num}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load lap data: {str(e)}"
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching laps for {year} R{round_num}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load lap data: {str(e)}"
+        )

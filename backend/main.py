@@ -1,27 +1,56 @@
-"""Pitwall.ai - F1 Analytics API"""
-import os, logging
+"""Pitwall.ai Backend - FastAPI Application"""
+import os
+import logging
+import fastf1
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import fastf1
-from routers.race import router as race_router
-from routers.drivers import router as drivers_router
+from routers import race, drivers
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
+# Enable fastf1 cache at startup
+CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 fastf1.Cache.enable_cache(CACHE_DIR)
+logger.info(f"FastF1 cache enabled at: {CACHE_DIR}")
 
-app = FastAPI(title="Pitwall.ai", description="F1 Analytics API", version="0.1.0", docs_url="/docs", redoc_url="/redoc")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.include_router(race_router)
-app.include_router(drivers_router)
+# Create FastAPI app
+app = FastAPI(
+    title="Pitwall.ai",
+    description="F1 Analytics API powered by FastF1",
+    version="1.0.0",
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(race.router)
+app.include_router(drivers.router)
+
 
 @app.get("/")
 async def root():
-    return {"service": "Pitwall.ai", "version": "0.1.0", "status": "running", "docs": "/docs"}
+    return {
+        "service": "Pitwall.ai",
+        "version": "1.0.0",
+        "status": "running",
+        "description": "F1 Analytics API",
+    }
+
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "cache_dir": CACHE_DIR,
+        "cache_exists": os.path.isdir(CACHE_DIR),
+    }
