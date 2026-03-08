@@ -2,33 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-f1-dark text-white font-sans antialiased;
-  }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-f1-dark;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-f1-gray rounded-full;
-  }
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e4e4e7;
+  background-color: #0a0a0f;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer components {
-  .card {
-    @apply bg-f1-card rounded-xl border border-gray-800 p-6 transition-all duration-200 hover:border-f1-red/30 hover:bg-f1-card-hover;
-  }
-  .btn-primary {
-    @apply bg-f1-red hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200;
-  }
-  .stat-value {
-    @apply text-3xl font-bold text-white tabular-nums;
-  }
-  .stat-label {
-    @apply text-sm text-f1-muted uppercase tracking-wider;
-  }
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0f; }
+::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #e10600; }
+
+.team-mercedes { color: #00d2be; }
+.team-redbull { color: #3671c6; }
+.team-ferrari { color: #e8002d; }
+.team-mclaren { color: #ff8700; }
+.team-astonmartin { color: #006f62; }
+.team-alpine { color: #0090ff; }
+.team-williams { color: #005aff; }
+.team-haas { color: #b6babd; }
+.team-sauber { color: #52e252; }
+.team-racingbulls { color: #6692ff; }

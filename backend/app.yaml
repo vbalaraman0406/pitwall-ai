@@ -1,13 +1,12 @@
 runtime: python312
-entrypoint: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind :$PORT
+entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT
 
 instance_class: F2
 
 automatic_scaling:
   min_instances: 0
   max_instances: 3
-  target_cpu_utilization: 0.75
+  target_cpu_utilization: 0.65
 
 env_variables:
-  FASTF1_CACHE_DIR: "/tmp/f1_cache"
-  CURRENT_SEASON: "2025"
+  PYTHONUNBUFFERED: "1"

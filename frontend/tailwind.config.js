@@ -1,27 +1,27 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        'f1-red': '#E10600',
-        'f1-dark': '#15151E',
-        'f1-card': '#1E1E2E',
-        'f1-card-hover': '#2A2A3E',
-        'f1-accent': '#FFFFFF',
-        'f1-gray': '#6B7280',
-        'f1-muted': '#9CA3AF',
-        'tire-soft': '#FF3333',
-        'tire-medium': '#FFD700',
-        'tire-hard': '#FFFFFF',
-        'tire-inter': '#39B54A',
-        'tire-wet': '#0067FF',
+        'pitwall': {
+          'bg': '#0a0a0f',
+          'card': '#12121a',
+          'border': '#1e1e2e',
+          'accent': '#e10600',
+          'accent-hover': '#ff1801',
+          'text': '#e4e4e7',
+          'text-muted': '#71717a',
+          'green': '#00d2be',
+          'yellow': '#fcd34d',
+          'blue': '#3b82f6',
+        },
       },
       fontFamily: {
-        'f1': ['Formula1', 'Arial', 'sans-serif'],
         'mono': ['JetBrains Mono', 'monospace'],
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
       },
     },
   },
   plugins: [],
-};
+}
