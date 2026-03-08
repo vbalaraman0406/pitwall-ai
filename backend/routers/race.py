@@ -1,6 +1,7 @@
+# FORCE_DEPLOY_1773001630.888818
 """Race data API routes with comprehensive error handling"""
 from fastapi import APIRouter, HTTPException
-from data.fastf1_loader import get_race_results, get_race_laps, get_schedule
+from backend.data.fastf1_loader import get_race_results, get_race_laps, get_schedule
 import logging
 
 logger = logging.getLogger(__name__)

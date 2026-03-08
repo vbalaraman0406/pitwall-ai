@@ -1,6 +1,7 @@
+# FORCE_DEPLOY_1773001630.888818
 """Driver data API routes with comprehensive error handling"""
 from fastapi import APIRouter, HTTPException
-from data.fastf1_loader import list_drivers, get_driver_season_stats
+from backend.data.fastf1_loader import list_drivers, get_driver_season_stats
 import logging
 
 logger = logging.getLogger(__name__)

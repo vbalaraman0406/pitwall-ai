@@ -1,3 +1,4 @@
+# FORCE_DEPLOY_1773001630.888818
 """FastF1 data loader with caching and error handling"""
 import os
 import fastf1
@@ -9,7 +10,7 @@ from typing import Optional, Dict, Any, List
 logger = logging.getLogger(__name__)
 
 # Enable fastf1 cache
-CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "cache")
+CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "/tmp/fastf1_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 fastf1.Cache.enable_cache(CACHE_DIR)
 
