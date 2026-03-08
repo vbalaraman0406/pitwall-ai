@@ -1,0 +1,187 @@
+{
+  "year": 2025,
+  "gp": "Australia",
+  "session": "Qualifying",
+  "results": [
+    {
+      "position": 1,
+      "driver": "NOR",
+      "full_name": "Lando Norris",
+      "team": "McLaren",
+      "q1": "1:15.912",
+      "q2": "1:15.415",
+      "q3": "1:15.096"
+    },
+    {
+      "position": 2,
+      "driver": "PIA",
+      "full_name": "Oscar Piastri",
+      "team": "McLaren",
+      "q1": "1:16.062",
+      "q2": "1:15.468",
+      "q3": "1:15.180"
+    },
+    {
+      "position": 3,
+      "driver": "VER",
+      "full_name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "q1": "1:16.018",
+      "q2": "1:15.565",
+      "q3": "1:15.481"
+    },
+    {
+      "position": 4,
+      "driver": "RUS",
+      "full_name": "George Russell",
+      "team": "Mercedes",
+      "q1": "1:15.971",
+      "q2": "1:15.798",
+      "q3": "1:15.546"
+    },
+    {
+      "position": 5,
+      "driver": "TSU",
+      "full_name": "Yuki Tsunoda",
+      "team": "Racing Bulls",
+      "q1": "1:16.225",
+      "q2": "1:16.009",
+      "q3": "1:15.670"
+    },
+    {
+      "position": 6,
+      "driver": "ALB",
+      "full_name": "Alexander Albon",
+      "team": "Williams",
+      "q1": "1:16.245",
+      "q2": "1:16.017",
+      "q3": "1:15.737"
+    },
+    {
+      "position": 7,
+      "driver": "LEC",
+      "full_name": "Charles Leclerc",
+      "team": "Ferrari",
+      "q1": "1:16.029",
+      "q2": "1:15.827",
+      "q3": "1:15.755"
+    },
+    {
+      "position": 8,
+      "driver": "HAM",
+      "full_name": "Lewis Hamilton",
+      "team": "Ferrari",
+      "q1": "1:16.213",
+      "q2": "1:15.919",
+      "q3": "1:15.973"
+    },
+    {
+      "position": 9,
+      "driver": "GAS",
+      "full_name": "Pierre Gasly",
+      "team": "Alpine",
+      "q1": "1:16.328",
+      "q2": "1:16.112",
+      "q3": "1:15.980"
+    },
+    {
+      "position": 10,
+      "driver": "SAI",
+      "full_name": "Carlos Sainz",
+      "team": "Williams",
+      "q1": "1:16.360",
+      "q2": "1:15.931",
+      "q3": "1:16.062"
+    },
+    {
+      "position": 11,
+      "driver": "HAD",
+      "full_name": "Isack Hadjar",
+      "team": "Racing Bulls",
+      "q1": "1:16.354",
+      "q2": "1:16.175",
+      "q3": null
+    },
+    {
+      "position": 12,
+      "driver": "ALO",
+      "full_name": "Fernando Alonso",
+      "team": "Aston Martin",
+      "q1": "1:16.288",
+      "q2": "1:16.453",
+      "q3": null
+    },
+    {
+      "position": 13,
+      "driver": "STR",
+      "full_name": "Lance Stroll",
+      "team": "Aston Martin",
+      "q1": "1:16.369",
+      "q2": "1:16.483",
+      "q3": null
+    },
+    {
+      "position": 14,
+      "driver": "DOO",
+      "full_name": "Jack Doohan",
+      "team": "Alpine",
+      "q1": "1:16.315",
+      "q2": "1:16.863",
+      "q3": null
+    },
+    {
+      "position": 15,
+      "driver": "BOR",
+      "full_name": "Gabriel Bortoleto",
+      "team": "Kick Sauber",
+      "q1": "1:16.516",
+      "q2": "1:17.520",
+      "q3": null
+    },
+    {
+      "position": 16,
+      "driver": "ANT",
+      "full_name": "Andrea Kimi Antonelli",
+      "team": "Mercedes",
+      "q1": "1:16.525",
+      "q2": null,
+      "q3": null
+    },
+    {
+      "position": 17,
+      "driver": "HUL",
+      "full_name": "Nico Hulkenberg",
+      "team": "Kick Sauber",
+      "q1": "1:16.579",
+      "q2": null,
+      "q3": null
+    },
+    {
+      "position": 18,
+      "driver": "LAW",
+      "full_name": "Liam Lawson",
+      "team": "Red Bull Racing",
+      "q1": "1:17.094",
+      "q2": null,
+      "q3": null
+    },
+    {
+      "position": 19,
+      "driver": "OCO",
+      "full_name": "Esteban Ocon",
+      "team": "Haas F1 Team",
+      "q1": "1:17.147",
+      "q2": null,
+      "q3": null
+    },
+    {
+      "position": 20,
+      "driver": "BEA",
+      "full_name": "Oliver Bearman",
+      "team": "Haas F1 Team",
+      "q1": null,
+      "q2": null,
+      "q3": null
+    }
+  ]
+}
