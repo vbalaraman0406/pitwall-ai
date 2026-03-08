@@ -1,0 +1,5 @@
+dispatch:
+  - url: "*/f1/*"
+    service: f1
+  - url: "*/f1"
+    service: f1

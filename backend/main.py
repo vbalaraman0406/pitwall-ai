@@ -1,29 +1,12 @@
-"""Pitwall.ai Backend - FastAPI Application"""
-import os
-import logging
-import fastf1
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import race, drivers
+from backend.routers import race, drivers
+import os
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = FastAPI(title="Pitwall AI", root_path="/f1")
 
-# Enable fastf1 cache at startup
-CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
-os.makedirs(CACHE_DIR, exist_ok=True)
-fastf1.Cache.enable_cache(CACHE_DIR)
-logger.info(f"FastF1 cache enabled at: {CACHE_DIR}")
-
-# Create FastAPI app
-app = FastAPI(
-    title="Pitwall.ai",
-    description="F1 Analytics API powered by FastF1",
-    version="1.0.0",
-)
-
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,25 +15,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(race.router)
-app.include_router(drivers.router)
-
-
-@app.get("/")
-async def root():
-    return {
-        "service": "Pitwall.ai",
-        "version": "1.0.0",
-        "status": "running",
-        "description": "F1 Analytics API",
-    }
+app.include_router(race.router, prefix="/api")
+app.include_router(drivers.router, prefix="/api")
 
 
 @app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "cache_dir": CACHE_DIR,
-        "cache_exists": os.path.isdir(CACHE_DIR),
-    }
+def health():
+    return {"status": "ok"}
+
+
+# Serve React frontend
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(frontend_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        file_path = os.path.join(frontend_dir, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
