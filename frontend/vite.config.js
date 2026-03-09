@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/f1/',
   build: {
+    outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: undefined

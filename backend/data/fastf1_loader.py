@@ -12,9 +12,12 @@ from typing import Optional, Dict, Any, List
 logger = logging.getLogger(__name__)
 
 # Enable fastf1 cache
-CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "/tmp/fastf1_cache")
-os.makedirs(CACHE_DIR, exist_ok=True)
-fastf1.Cache.enable_cache(CACHE_DIR)
+CACHE_DIR = "/tmp/fastf1_cache"
+try:
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    fastf1.Cache.enable_cache(CACHE_DIR)
+except Exception as e:
+    logger.warning(f"Could not enable fastf1 cache: {e}")
 
 # In-memory cache for processed results
 _session_cache: Dict[str, Any] = {}
