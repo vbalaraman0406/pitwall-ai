@@ -1,54 +1,38 @@
-# FORCE_DEPLOY_1773001630.888818
-"""Driver data API routes with comprehensive error handling"""
-from fastapi import APIRouter, HTTPException
-from backend.data.fastf1_loader import list_drivers, get_driver_season_stats
-import logging
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
-logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/drivers", tags=["drivers"])
+router = APIRouter(prefix="/drivers", tags=["drivers"])
 
+try:
+    from backend.data.fastf1_loader import get_drivers_list, get_driver_season_stats, get_driver_comparison
+except Exception as e:
+    print(f"Warning: Could not import fastf1_loader: {e}")
+    def get_drivers_list(year): return []
+    def get_driver_season_stats(year, driver): return {}
+    def get_driver_comparison(year, d1, d2): return {}
 
 @router.get("/{year}")
 async def get_drivers(year: int):
-    """List all drivers for a given year."""
     try:
-        drivers = list_drivers(year)
-        return {"year": year, "drivers": drivers}
+        data = get_drivers_list(year)
+        if not isinstance(data, list):
+            data = []
+        return data
     except Exception as e:
-        logger.error(f"Error fetching drivers for {year}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to load drivers: {str(e)}")
-
+        return JSONResponse(content={"detail": str(e)}, status_code=500)
 
 @router.get("/{year}/{driver}/stats")
 async def get_driver_stats(year: int, driver: str):
-    """Get driver season statistics with timeout protection."""
     try:
-        stats = get_driver_season_stats(year, driver)
-        return {"year": year, "driver": driver, "stats": stats}
+        data = get_driver_season_stats(year, driver)
+        return data
     except Exception as e:
-        logger.error(f"Error fetching stats for {driver} in {year}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to load driver stats: {str(e)}"
-        )
-
+        return JSONResponse(content={"detail": str(e)}, status_code=500)
 
 @router.get("/{year}/compare")
 async def compare_drivers(year: int, d1: str = "VER", d2: str = "HAM"):
-    """Compare two drivers' season stats."""
     try:
-        stats1 = get_driver_season_stats(year, d1)
-        stats2 = get_driver_season_stats(year, d2)
-        return {
-            "year": year,
-            "comparison": {
-                d1: stats1,
-                d2: stats2,
-            }
-        }
+        data = get_driver_comparison(year, d1, d2)
+        return data
     except Exception as e:
-        logger.error(f"Error comparing {d1} vs {d2} in {year}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to compare drivers: {str(e)}"
-        )
+        return JSONResponse(content={"detail": str(e)}, status_code=500)

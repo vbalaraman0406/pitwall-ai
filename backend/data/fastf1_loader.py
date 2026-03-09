@@ -1,3 +1,5 @@
+# DEPLOY_HASH_1773005488_85731
+# DEPLOY_TS: 1773005348.636301
 # FORCE_DEPLOY_1773001630.888818
 """FastF1 data loader with caching and error handling"""
 import os
