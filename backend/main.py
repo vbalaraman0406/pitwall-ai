@@ -1,22 +1,14 @@
-# DEPLOY_MARKER: 1773014667
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import sys
 
-# Ensure project root is on sys.path for GCP App Engine
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure backend package is importable
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from backend.routers import race, drivers
-
-app = FastAPI(
-    title="Pitwall.ai - F1 Analytics",
-    description="F1 race analytics powered by FastF1",
-    version="1.0.0",
-    root_path="/f1"
-)
+app = FastAPI(title="Pitwall.ai", docs_url="/f1/docs", openapi_url="/f1/openapi.json")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Enable fastf1 cache in writable /tmp directory
+# FastF1 cache in /tmp (GCP App Engine read-only filesystem except /tmp)
 try:
     import fastf1
     cache_dir = "/tmp/fastf1_cache"
@@ -35,58 +27,66 @@ try:
 except Exception:
     pass
 
-# --- API ROUTES (BEFORE static files) ---
+# Import routers
+from backend.routers import race, drivers
+
+app.include_router(race.router, prefix="/f1/api")
+app.include_router(drivers.router, prefix="/f1/api")
+
+
+@app.get("/f1/api/health")
+async def health():
+    return {"status": "ok", "service": "pitwall-ai", "version": "f1final"}
+
 
 @app.get("/health")
-@app.get("/api/health")
-async def health_check():
-    return JSONResponse(content={"status": "ok", "service": "pitwall-ai-f1"})
+async def health_root():
+    return {"status": "ok"}
 
-# Mount routers at /api prefix. Routers have /race and /drivers prefixes.
-# So final paths: /api/race/..., /api/drivers/...
-app.include_router(race.router, prefix="/api", tags=["races"])
-app.include_router(drivers.router, prefix="/api", tags=["drivers"])
 
-# Frontend calls /api/races/{year} but router defines /api/race/schedule/{year}
-# Add alias route
-@app.get("/api/races/{year}")
-async def races_alias(year: int):
-    try:
-        from backend.data.fastf1_loader import get_race_schedule
-        data = get_race_schedule(year)
-        if not isinstance(data, list):
-            data = []
-        return data
-    except Exception as e:
-        return JSONResponse(content={"detail": str(e)}, status_code=500)
+@app.get("/")
+async def root():
+    return {"message": "Pitwall.ai API", "docs": "/f1/docs"}
 
-# --- STATIC FILES (SPA catch-all, LAST) ---
 
-frontend_dist = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist")
-frontend_dist = os.path.abspath(frontend_dist)
+# Serve frontend static assets
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DIST_DIR = os.path.join(BASE_DIR, "..", "frontend", "dist")
+ASSETS_DIR = os.path.join(DIST_DIR, "assets")
 
-if os.path.exists(frontend_dist):
-    assets_dir = os.path.join(frontend_dist, "assets")
-    if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+if os.path.isdir(ASSETS_DIR):
+    app.mount("/f1/assets", StaticFiles(directory=ASSETS_DIR), name="static-assets")
 
-    @app.get("/vite.svg")
-    async def vite_svg():
-        svg_path = os.path.join(frontend_dist, "vite.svg")
-        if os.path.exists(svg_path):
+# Serve vite.svg and other root-level static files
+if os.path.isdir(DIST_DIR):
+    @app.get("/f1/vite.svg")
+    async def serve_vite_svg():
+        svg_path = os.path.join(DIST_DIR, "vite.svg")
+        if os.path.isfile(svg_path):
             return FileResponse(svg_path, media_type="image/svg+xml")
-        return JSONResponse(content={"error": "not found"}, status_code=404)
+        return JSONResponse({"error": "not found"}, status_code=404)
 
-    @app.get("/{path:path}")
-    async def serve_spa(path: str):
-        file_path = os.path.join(frontend_dist, path)
-        if path and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        index_path = os.path.join(frontend_dist, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path, media_type="text/html")
-        return JSONResponse(content={"error": "Frontend not built"}, status_code=500)
-else:
-    @app.get("/")
-    async def no_frontend():
-        return JSONResponse(content={"message": "Pitwall.ai API running. Frontend not found.", "docs": "/f1/docs"})
+
+@app.get("/f1")
+async def serve_spa_root_no_slash():
+    index = os.path.join(DIST_DIR, "index.html")
+    if os.path.isfile(index):
+        return FileResponse(index, media_type="text/html")
+    return JSONResponse({"error": "index.html not found"}, status_code=404)
+
+
+@app.get("/f1/{path:path}")
+async def serve_spa(path: str):
+    # First check if it is a real file in dist
+    file_path = os.path.join(DIST_DIR, path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    # Otherwise serve index.html for SPA routing
+    index = os.path.join(DIST_DIR, "index.html")
+    if os.path.isfile(index):
+        return FileResponse(index, media_type="text/html")
+    return JSONResponse({"error": "index.html not found"}, status_code=404)
+
+
+# DEPLOY_TIMESTAMP=1773016290
+# FINAL_DEPLOY_TS=1773016792

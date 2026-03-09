@@ -36,3 +36,5 @@ async def compare_drivers(year: int, d1: str = "VER", d2: str = "HAM"):
         return data
     except Exception as e:
         return JSONResponse(content={"detail": str(e)}, status_code=500)
+
+# DEPLOY_TIMESTAMP=1773016290

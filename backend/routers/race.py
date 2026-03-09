@@ -40,3 +40,5 @@ async def race_laps(year: int, round_num: int):
         return data
     except Exception as e:
         return JSONResponse(content={"detail": str(e)}, status_code=500)
+
+# DEPLOY_TIMESTAMP=1773016290
