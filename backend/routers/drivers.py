@@ -1,15 +1,12 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+try:
+    from backend.data.fastf1_loader import get_drivers_list, get_driver_season_stats, get_driver_comparison
+except ImportError:
+    from data.fastf1_loader import get_drivers_list, get_driver_season_stats, get_driver_comparison
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
-try:
-    from backend.data.fastf1_loader import get_drivers_list, get_driver_season_stats, get_driver_comparison
-except Exception as e:
-    print(f"Warning: Could not import fastf1_loader: {e}")
-    def get_drivers_list(year): return []
-    def get_driver_season_stats(year, driver): return {}
-    def get_driver_comparison(year, d1, d2): return {}
 
 @router.get("/{year}")
 async def get_drivers(year: int):

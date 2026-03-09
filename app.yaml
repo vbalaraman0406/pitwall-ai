@@ -5,6 +5,3 @@ automatic_scaling:
   min_instances: 0
   max_instances: 3
 entrypoint: python -m gunicorn -w 2 -k uvicorn.workers.UvicornWorker backend.main:app --bind :$PORT
-env_variables:
-  DEPLOY_TS: "1773005459"
-  PYTHONPATH: /workspace
