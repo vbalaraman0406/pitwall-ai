@@ -4,4 +4,8 @@ instance_class: F2
 automatic_scaling:
   min_instances: 0
   max_instances: 3
-entrypoint: python -m gunicorn -w 2 -k uvicorn.workers.UvicornWorker backend.main:app --bind :$PORT
+entrypoint: python -m gunicorn -w 2 -k uvicorn.workers.UvicornWorker backend.main:app --bind :$PORT --timeout 120
+
+env_variables:
+  GEMINI_API_KEY: "AIzaSyBS7Bk6flwkmCLjEXWcl9-QzJa009pv6wY"
+

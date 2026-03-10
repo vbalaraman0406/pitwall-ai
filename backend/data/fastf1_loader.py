@@ -264,4 +264,233 @@ def list_drivers(year: int) -> list:
         logger.error(f"Failed to list drivers for {year}: {e}")
         raise
 
+
+def get_tire_strategy(year: int, round_num: int) -> list:
+    """Get tire strategy data for all drivers."""
+    cache_key = f"strategy_{year}_{round_num}"
+    if cache_key in _results_cache:
+        return _results_cache[cache_key]
+
+    try:
+        session = _load_session(year, round_num)
+        laps = session.laps
+        if laps is None or laps.empty:
+            return []
+
+        strategies = []
+        for driver_num in session.drivers:
+            d_laps = laps.pick_driver(driver_num)
+            if d_laps.empty:
+                continue
+            try:
+                info = session.get_driver(driver_num)
+                abbreviation = info.get("Abbreviation", str(driver_num))
+                first = str(info.get("FirstName", ""))
+                last = str(info.get("LastName", ""))
+                team = str(info.get("TeamName", ""))
+            except Exception:
+                abbreviation = str(driver_num)
+                first, last, team = "", "", ""
+
+            stints = []
+            for stint_num, stint_laps in d_laps.groupby("Stint"):
+                first_lap = stint_laps.iloc[0]
+                stints.append({
+                    "stint": int(stint_num),
+                    "compound": str(first_lap["Compound"]) if pd.notna(first_lap.get("Compound")) else "UNKNOWN",
+                    "laps": len(stint_laps),
+                    "start_lap": int(stint_laps["LapNumber"].min()),
+                    "end_lap": int(stint_laps["LapNumber"].max()),
+                })
+            strategies.append({
+                "driver": abbreviation,
+                "full_name": f"{first} {last}".strip(),
+                "team": team,
+                "stints": stints,
+            })
+
+        _results_cache[cache_key] = strategies
+        return strategies
+    except Exception as e:
+        logger.error(f"Failed to get tire strategy for {year} R{round_num}: {e}")
+        raise
+
+
+def _load_session_with_telemetry(year: int, round_num: int, session_type: str = "R"):
+    """Load a FastF1 session WITH telemetry data (heavier, used for track map)."""
+    cache_key = f"tel_{year}_{round_num}_{session_type}"
+    if cache_key in _session_cache:
+        return _session_cache[cache_key]
+
+    try:
+        session = fastf1.get_session(year, round_num, session_type)
+        session.load(telemetry=True, messages=False, weather=False)
+        _session_cache[cache_key] = session
+        return session
+    except Exception as e:
+        logger.error(f"Failed to load session with telemetry {year} R{round_num}: {e}")
+        raise
+
+
+def get_track_coordinates(year: int, round_num: int) -> dict:
+    """
+    Get circuit track coordinates (X/Y points) from the fastest lap telemetry.
+    Returns the circuit outline plus circuit info for proper visualization.
+    """
+    cache_key = f"track_{year}_{round_num}"
+    if cache_key in _results_cache:
+        return _results_cache[cache_key]
+
+    try:
+        session = _load_session_with_telemetry(year, round_num)
+        laps = session.laps
+
+        # Get fastest lap for track shape
+        fastest = laps.pick_fastest()
+        pos = fastest.get_pos_data()
+
+        # Extract X/Y coordinates, sample every 4th point to reduce payload
+        coords = []
+        for i in range(0, len(pos), 4):
+            row = pos.iloc[i]
+            if pd.notna(row.get("X")) and pd.notna(row.get("Y")):
+                coords.append({
+                    "x": float(row["X"]),
+                    "y": float(row["Y"]),
+                })
+
+        # Get circuit info for rotation and corners
+        circuit_info = session.get_circuit_info()
+        rotation = float(circuit_info.rotation) if hasattr(circuit_info, "rotation") else 0
+
+        corners = []
+        if hasattr(circuit_info, "corners") and circuit_info.corners is not None:
+            for _, c in circuit_info.corners.iterrows():
+                corners.append({
+                    "number": int(c.get("Number", 0)),
+                    "x": float(c.get("X", 0)),
+                    "y": float(c.get("Y", 0)),
+                    "angle": float(c.get("Angle", 0)) if pd.notna(c.get("Angle")) else 0,
+                    "letter": str(c.get("Letter", "")),
+                })
+
+        result = {
+            "year": year,
+            "round": round_num,
+            "coordinates": coords,
+            "rotation": rotation,
+            "corners": corners,
+            "total_points": len(coords),
+        }
+
+        _results_cache[cache_key] = result
+        return result
+    except Exception as e:
+        logger.error(f"Failed to get track coordinates for {year} R{round_num}: {e}")
+        raise
+
+
+def get_driver_positions(year: int, round_num: int) -> dict:
+    """
+    Get per-lap driver positions on track for animated replay.
+    Returns sampled X/Y positions for each driver across all race laps.
+    """
+    cache_key = f"positions_{year}_{round_num}"
+    if cache_key in _results_cache:
+        return _results_cache[cache_key]
+
+    try:
+        session = _load_session_with_telemetry(year, round_num)
+        laps = session.laps
+        results = session.results
+
+        if laps is None or laps.empty:
+            return {"year": year, "round": round_num, "drivers": [], "total_laps": 0}
+
+        total_laps = int(laps["LapNumber"].max())
+
+        driver_data = []
+        for driver_num in session.drivers:
+            d_laps = laps.pick_driver(driver_num)
+            if d_laps.empty:
+                continue
+
+            try:
+                info = session.get_driver(driver_num)
+                abbreviation = info.get("Abbreviation", str(driver_num))
+                team = str(info.get("TeamName", ""))
+                team_color = str(info.get("TeamColor", "888888"))
+            except Exception:
+                abbreviation = str(driver_num)
+                team = ""
+                team_color = "888888"
+
+            # Get position for selected laps (sample every 3rd lap to reduce data)
+            lap_positions = []
+            for _, lap in d_laps.iterrows():
+                lap_num = int(lap.get("LapNumber", 0))
+
+                # Get lap time
+                lap_time = None
+                if pd.notna(lap.get("LapTime")) and hasattr(lap["LapTime"], "total_seconds"):
+                    lap_time = round(lap["LapTime"].total_seconds(), 3)
+
+                position = int(lap.get("Position")) if pd.notna(lap.get("Position")) else None
+
+                # Try to get position data for this lap
+                try:
+                    pos_data = lap.get_pos_data()
+                    if pos_data is not None and not pos_data.empty:
+                        # Sample ~20 points per lap for animation
+                        step = max(1, len(pos_data) // 20)
+                        track_points = []
+                        for j in range(0, len(pos_data), step):
+                            p = pos_data.iloc[j]
+                            if pd.notna(p.get("X")) and pd.notna(p.get("Y")):
+                                track_points.append({
+                                    "x": float(p["X"]),
+                                    "y": float(p["Y"]),
+                                })
+                        lap_positions.append({
+                            "lap": lap_num,
+                            "lap_time": lap_time,
+                            "position": position,
+                            "points": track_points,
+                        })
+                    else:
+                        lap_positions.append({
+                            "lap": lap_num,
+                            "lap_time": lap_time,
+                            "position": position,
+                            "points": [],
+                        })
+                except Exception:
+                    lap_positions.append({
+                        "lap": lap_num,
+                        "lap_time": lap_time,
+                        "position": position,
+                        "points": [],
+                    })
+
+            driver_data.append({
+                "driver": abbreviation,
+                "team": team,
+                "team_color": f"#{team_color}" if not team_color.startswith("#") else team_color,
+                "laps": lap_positions,
+            })
+
+        result = {
+            "year": year,
+            "round": round_num,
+            "total_laps": total_laps,
+            "drivers": driver_data,
+        }
+
+        _results_cache[cache_key] = result
+        return result
+    except Exception as e:
+        logger.error(f"Failed to get driver positions for {year} R{round_num}: {e}")
+        raise
+
+
 # DEPLOY_TIMESTAMP=1773016290

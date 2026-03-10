@@ -1,3 +1,400 @@
-/* minimal reset */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background-color: #0a0a0f; color: #fff; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ===== Ferrari-Inspired Design Tokens ===== */
+:root {
+  /* Ferrari Core */
+  --f1-red: #EF1A2D;
+  --f1-red-dark: #C91424;
+  --f1-red-glow: rgba(239, 26, 45, 0.35);
+  --f1-red-soft: rgba(239, 26, 45, 0.12);
+
+  /* Giallo Modena Gold */
+  --accent-gold: #FFF200;
+  --accent-gold-dim: #E2B13C;
+  --accent-gold-soft: rgba(255, 242, 0, 0.10);
+  --accent-gold-glow: rgba(255, 242, 0, 0.25);
+
+  /* Dark Theme — warm blacks */
+  --bg-primary: #08080d;
+  --bg-secondary: #0e0e16;
+  --bg-card: #141420;
+  --bg-card-hover: #1a1a2a;
+  --bg-surface: #1c1c2c;
+  --bg-elevated: #222236;
+
+  /* Borders */
+  --border-default: #2e2e42;
+  --border-subtle: #222234;
+  --border-accent: rgba(239, 26, 45, 0.3);
+  --border-gold: rgba(255, 242, 0, 0.2);
+
+  /* Text — brighter for readability ★ */
+  --text-primary: #ffffff;
+  --text-secondary: #e2e2f0;
+  --text-muted: #a0a8be;
+  --text-dim: #707888;
+
+  /* Compound Colors */
+  --compound-soft: #ff3333;
+  --compound-medium: #ffd700;
+  --compound-hard: #ffffff;
+  --compound-inter: #39b54a;
+  --compound-wet: #0067ff;
+
+  /* Team Colors (2025 actual from OpenF1) */
+  --team-mclaren: #F47600;
+  --team-redbull: #4781D7;
+  --team-ferrari: #ED1131;
+  --team-mercedes: #00D7B6;
+  --team-aston: #229971;
+  --team-alpine: #00A1E8;
+  --team-williams: #1868DB;
+  --team-rb: #6C98FF;
+  --team-audi: #F50537;
+  --team-haas: #9C9FA2;
+  --team-cadillac: #909090;
+
+  /* Spacing */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px var(--f1-red-glow);
+  --shadow-gold: 0 0 16px var(--accent-gold-glow);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* ===== Card System ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.card-glass {
+  background: rgba(20, 20, 32, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.card-gold {
+  border-color: var(--border-gold);
+}
+.card-gold:hover {
+  border-color: var(--accent-gold-dim);
+  box-shadow: var(--shadow-gold);
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, var(--f1-red), var(--f1-red-dark));
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  background: var(--bg-surface);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--accent-gold-dim), #D4A32A);
+  color: #000;
+  font-weight: 800;
+  border: none;
+}
+.btn-gold:hover {
+  box-shadow: var(--shadow-gold);
+}
+
+/* ===== Data Table ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table thead { position: sticky; top: 0; z-index: 1; }
+
+.data-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  color: var(--accent-gold-dim);
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-card);
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.data-table tbody tr { transition: background-color 0.15s ease; }
+.data-table tbody tr:hover { background-color: var(--bg-card-hover); }
+
+/* ===== Stats ===== */
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.03em;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+}
+
+/* ===== Tab Navigation ===== */
+.tab-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.tab-btn.active {
+  background: var(--f1-red);
+  color: white;
+  border-color: var(--f1-red);
+  box-shadow: 0 0 12px var(--f1-red-glow);
+}
+
+/* ===== Skeleton Loading ===== */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+.skeleton-card { height: 120px; border-radius: var(--radius-lg); }
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--f1-red-glow); }
+  50% { box-shadow: 0 0 20px 4px var(--f1-red-glow); }
+}
+
+@keyframes goldPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+.animate-slide-in { animation: slideInLeft 0.3s ease-out forwards; }
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.16s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.20s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.28s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.32s; }
+.stagger-children > *:nth-child(n+9) { animation-delay: 0.36s; }
+
+/* ===== Position Badges ===== */
+.pos-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-weight: 900;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pos-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+.pos-2 { background: linear-gradient(135deg, #C0C0C0, #9CA3AF); color: #000; }
+.pos-3 { background: linear-gradient(135deg, #CD7F32, #B8860B); color: #fff; }
+
+/* ===== Gold Divider ===== */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold-dim), transparent);
+  border: none;
+  margin: 1.5rem 0;
+}
+
+/* ===== Carbon Fiber Texture ===== */
+.carbon-bg {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+  background-size: 4px 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .card { padding: 1rem; }
+  .stat-value { font-size: 1.5rem; }
+  h1 { font-size: 1.75rem !important; }
+}
+
+/* ===== Gradient backdrops ===== */
+.gradient-bg {
+  background: radial-gradient(ellipse at top, rgba(239, 26, 45, 0.06) 0%, transparent 50%),
+              var(--bg-primary);
+}
+
+.gradient-ferrari {
+  background: linear-gradient(135deg, rgba(239, 26, 45, 0.12) 0%, rgba(226, 177, 60, 0.06) 50%, var(--bg-card) 100%);
+}
+
+/* ===== Team Color Bars ===== */
+.team-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  min-height: 1.5rem;
+}
+
+/* ===== Loading Spinner ===== */
+.f1-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--f1-red);
+  border-top: 4px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
