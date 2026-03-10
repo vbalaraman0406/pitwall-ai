@@ -489,32 +489,82 @@ export default function Constructors() {
         )}
 
         {/* Full Constructor Standings */}
-        {raceConstructors.length > 0 && (
+        {raceConstructors.length > 0 && (() => {
+          // Build full actual constructor standings (all teams, not just winner)
+          const actualConstructorStandings = {};
+          if (actualRaceResults && actualRaceResults.length > 0) {
+            actualRaceResults.forEach(r => {
+              const team = r.team;
+              if (!team) return;
+              if (!actualConstructorStandings[team]) actualConstructorStandings[team] = { team, bestPosition: 99, bestDriver: '', totalPoints: 0, drivers: [] };
+              const pos = r.position || 99;
+              const points = pos <= 10 ? [25, 18, 15, 12, 10, 8, 6, 4, 2, 1][pos - 1] : 0;
+              actualConstructorStandings[team].totalPoints += points;
+              actualConstructorStandings[team].drivers.push({ driver: r.driver, position: pos, points });
+              if (pos < actualConstructorStandings[team].bestPosition) {
+                actualConstructorStandings[team].bestPosition = pos;
+                actualConstructorStandings[team].bestDriver = r.driver;
+                actualConstructorStandings[team].bestName = r.name || r.driver;
+              }
+            });
+          }
+          const actualStandingsSorted = Object.values(actualConstructorStandings).sort((a, b) => b.totalPoints - a.totalPoints);
+          const actualRankMap = {};
+          actualStandingsSorted.forEach((t, i) => { actualRankMap[t.team] = i + 1; });
+
+          return (
           <div className="card" style={{ marginTop: '1rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>
-              Predicted Constructor Standings — {raceInfo?.name || `Round ${selectedRound}`}
+              {hasRaceResults ? 'Predicted vs Actual' : 'Predicted'} Constructor Standings — {raceInfo?.name || `Round ${selectedRound}`}
             </h3>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>POS</th>
+                  <th>PRED</th>
+                  {hasRaceResults && <th>ACTUAL</th>}
+                  {hasRaceResults && <th>DIFF</th>}
                   <th>CONSTRUCTOR</th>
                   <th>TIER</th>
-                  <th>BEST DRIVER</th>
-                  <th>BEST POS</th>
-                  <th>TOTAL POINTS</th>
-                  <th>DRIVERS</th>
+                  <th>PRED PTS</th>
+                  {hasRaceResults && <th>ACTUAL PTS</th>}
+                  <th>PRED DRIVERS</th>
+                  {hasRaceResults && <th>ACTUAL DRIVERS</th>}
                 </tr>
               </thead>
               <tbody>
-                {raceConstructors.map((team, idx) => (
+                {raceConstructors.map((team, idx) => {
+                  const actualTeam = actualConstructorStandings[team.team];
+                  const actualRank = actualRankMap[team.team];
+                  const predRank = idx + 1;
+                  const diff = actualRank ? predRank - actualRank : null;
+                  return (
                   <tr key={team.team}>
                     <td>
                       <span className={`pos-badge ${idx < 3 ? `pos-${idx + 1}` : ''}`}
                         style={idx >= 3 ? { background: 'var(--bg-surface)', color: 'var(--text-secondary)' } : {}}>
-                        {idx + 1}
+                        {predRank}
                       </span>
                     </td>
+                    {hasRaceResults && (
+                      <td>
+                        {actualRank ? (
+                          <span className={`pos-badge ${actualRank <= 3 ? `pos-${actualRank}` : ''}`}
+                            style={actualRank > 3 ? { background: 'var(--bg-surface)', color: 'var(--text-secondary)' } : {}}>
+                            {actualRank}
+                          </span>
+                        ) : <span style={{ color: 'var(--text-dim)' }}>—</span>}
+                      </td>
+                    )}
+                    {hasRaceResults && (
+                      <td>
+                        {diff !== null ? (
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '0.75rem',
+                            color: diff === 0 ? '#22c55e' : diff > 0 ? '#22c55e' : '#ef4444' }}>
+                            {diff === 0 ? '✓' : diff > 0 ? `↑${diff}` : `↓${Math.abs(diff)}`}
+                          </span>
+                        ) : <span style={{ color: 'var(--text-dim)' }}>—</span>}
+                      </td>
+                    )}
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div className="team-bar" style={{ background: getTeamColor(team.team) }} />
@@ -528,16 +578,14 @@ export default function Constructors() {
                         {CONSTRUCTORS[team.team]?.tier || '?'}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        {getPhoto(team.bestDriver) && <img src={getPhoto(team.bestDriver)} alt={team.bestDriver} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />}
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{team.bestName || team.bestDriver}</span>
-                      </div>
-                    </td>
-                    <td style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>P{team.bestPosition}</td>
                     <td style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 900, color: 'var(--accent-gold-dim)' }}>{team.totalPoints}</td>
+                    {hasRaceResults && (
+                      <td style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 900, color: '#22c55e' }}>
+                        {actualTeam ? actualTeam.totalPoints : '—'}
+                      </td>
+                    )}
                     <td>
-                      <div style={{ display: 'flex', gap: '0.375rem' }}>
+                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
                         {team.drivers.map(d => (
                           <span key={d.driver} style={{ fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem',
                             background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
@@ -546,12 +594,26 @@ export default function Constructors() {
                         ))}
                       </div>
                     </td>
+                    {hasRaceResults && (
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                          {actualTeam ? actualTeam.drivers.map(d => (
+                            <span key={d.driver} style={{ fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem',
+                              background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                              {d.driver} P{d.position}
+                            </span>
+                          )) : <span style={{ color: 'var(--text-dim)' }}>—</span>}
+                        </div>
+                      </td>
+                    )}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
