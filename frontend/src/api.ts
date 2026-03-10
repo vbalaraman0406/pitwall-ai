@@ -124,6 +124,25 @@ export const getPredictions = async (year, round) => {
   }
 };
 
+export const getQualifyingPredictions = async (year, round) => {
+  try {
+    const response = await api.get(`/predictions/${year}/${round}/qualifying`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching qualifying predictions:', error);
+    return null;
+  }
+};
+
+export const getSprintPredictions = async (year, round) => {
+  try {
+    const response = await api.get(`/predictions/${year}/${round}/sprint`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching sprint predictions:', error);
+    return null;
+  }
+};
 // --- Health check ---
 export const getHealth = async () => {
   try {
