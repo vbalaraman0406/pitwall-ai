@@ -5,6 +5,7 @@ import { CURRENT_SEASON } from '../constants';
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
   { path: '/drivers', label: 'Drivers', icon: '🏎️' },
+  { path: '/constructors', label: 'Constructors', icon: '🏗️' },
   { path: '/predictions', label: 'AI Predictions', icon: '🤖' },
 ];
 
