@@ -149,7 +149,7 @@ export default function HeadToHead() {
       ) : h2hData ? (
         <>
           {/* Driver header cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', gap: '1rem', alignItems: 'center' }}>
+          <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', gap: '1rem', alignItems: 'center' }}>
             {[0, 1].map(i => (
               <div key={i} className="card" style={{ textAlign: 'center', padding: '1.5rem', borderTop: `3px solid ${selectedTeam.color}`, order: i === 0 ? 0 : 2 }}>
                 {getPhoto(h2hData[i === 0 ? 'd1' : 'd2']) && (

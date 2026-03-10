@@ -134,7 +134,7 @@ export default function Championship() {
       </div>
 
       {/* Accuracy Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div className="mobile-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
         {[
           { label: 'RACES COMPLETED', value: accuracy.totalRaces, sub: `/ ${schedule.length}`, color: 'var(--text-primary)' },
           { label: 'WINNER PREDICTED', value: accuracy.winnerCorrect, sub: `/ ${accuracy.totalRaces}`, color: accuracy.winnerCorrect > 0 ? '#22c55e' : '#ef4444' },

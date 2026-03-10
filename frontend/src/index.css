@@ -365,10 +365,84 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== Responsive ===== */
+
+/* --- Tablet --- */
+@media (max-width: 1024px) {
+  .card { padding: 1.25rem; }
+}
+
+/* --- Mobile --- */
 @media (max-width: 768px) {
-  .card { padding: 1rem; }
+  .card {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+  }
+  .card:hover {
+    transform: none;
+  }
   .stat-value { font-size: 1.5rem; }
-  h1 { font-size: 1.75rem !important; }
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.15rem !important; }
+  h3 { font-size: 0.95rem !important; }
+
+  /* Tables - horizontal scroll */
+  .data-table {
+    font-size: 0.75rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .data-table thead,
+  .data-table tbody,
+  .data-table tr {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.7rem;
+  }
+  .data-table th {
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Tab buttons - scroll horizontally */
+  .tab-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  /* Position badges - smaller */
+  .pos-badge {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.65rem;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* Gold divider */
+  .gold-divider {
+    margin: 1rem 0;
+  }
+}
+
+/* --- Small mobile --- */
+@media (max-width: 480px) {
+  .card {
+    padding: 0.75rem;
+  }
+  .stat-value { font-size: 1.25rem; }
+  h1 { font-size: 1.3rem !important; }
 }
 
 /* ===== Gradient backdrops ===== */
@@ -398,3 +472,24 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+
+/* ===== Mobile utility classes ===== */
+@media (max-width: 768px) {
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  .mobile-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-hide {
+    display: none !important;
+  }
+}
+

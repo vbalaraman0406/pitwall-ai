@@ -124,7 +124,7 @@ export default function Home() {
       </div>
 
       {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div className="mobile-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
         {[
           { label: 'RACES', value: schedule.length || 24, color: 'var(--f1-red)' },
           { label: 'DRIVERS', value: 22, color: 'var(--accent-gold-dim)' },
@@ -139,7 +139,7 @@ export default function Home() {
       </div>
 
       {/* Feature Columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
         {[
           {
             icon: '🗺️',

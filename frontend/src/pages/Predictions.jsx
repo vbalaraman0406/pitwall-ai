@@ -228,7 +228,7 @@ export default function Predictions() {
       )}
 
       {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
         <div className="card" style={{ textAlign: 'center' }}>
           <p className="stat-value" style={{ color: prediction?.model === 'gemini' ? 'var(--accent-gold-dim)' : 'var(--f1-red)' }}>
             {prediction?.model === 'gemini' ? '🧠 AI' : 'v1'}
