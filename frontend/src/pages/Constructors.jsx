@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDriverPhotos, getRaceSchedule, getPredictions, getQualifyingPredictions } from '../api';
+import { getDriverPhotos, getRaceSchedule, getPredictions, getQualifyingPredictions, getRaceResults, getQualifyingResults } from '../api';
 import { CURRENT_SEASON } from '../constants';
 
 // 2026 Constructor data
@@ -128,6 +128,8 @@ export default function Constructors() {
   const [selectedRound, setSelectedRound] = useState(1);
   const [racePrediction, setRacePrediction] = useState(null);
   const [qualiPrediction, setQualiPrediction] = useState(null);
+  const [actualRaceResults, setActualRaceResults] = useState(null);
+  const [actualQualiResults, setActualQualiResults] = useState(null);
   const [predLoading, setPredLoading] = useState(false);
 
   useEffect(() => {
@@ -138,17 +140,23 @@ export default function Constructors() {
       });
   }, []);
 
-  // Load predictions when round changes
+  // Load predictions + actual results when round changes
   useEffect(() => {
     setPredLoading(true);
     setRacePrediction(null);
     setQualiPrediction(null);
+    setActualRaceResults(null);
+    setActualQualiResults(null);
     Promise.all([
       getPredictions(CURRENT_SEASON, selectedRound),
       getQualifyingPredictions(CURRENT_SEASON, selectedRound),
-    ]).then(([race, quali]) => {
+      getRaceResults(CURRENT_SEASON, selectedRound).catch(() => null),
+      getQualifyingResults(CURRENT_SEASON, selectedRound).catch(() => null),
+    ]).then(([race, quali, raceRes, qualiRes]) => {
       setRacePrediction(race);
       setQualiPrediction(quali);
+      if (raceRes?.results?.length > 0) setActualRaceResults(raceRes.results);
+      if (qualiRes?.results?.length > 0) setActualQualiResults(qualiRes.results);
       setPredLoading(false);
     }).catch(() => setPredLoading(false));
   }, [selectedRound]);
@@ -185,6 +193,33 @@ export default function Constructors() {
   const raceWinnerTeam = raceConstructors[0];
   const qualiWinnerTeam = qualiConstructors[0];
   const raceInfo = schedule.find(r => r.round === selectedRound);
+
+  // Aggregate actual results to constructor level
+  const getActualConstructorWinner = (results) => {
+    if (!results || results.length === 0) return null;
+    const teamScores = {};
+    results.forEach(r => {
+      const team = r.team;
+      if (!team) return;
+      if (!teamScores[team]) teamScores[team] = { team, bestPosition: 99, bestDriver: '', totalPoints: 0, drivers: [] };
+      const pos = r.position || 99;
+      const points = pos <= 10 ? [25, 18, 15, 12, 10, 8, 6, 4, 2, 1][pos - 1] : 0;
+      teamScores[team].totalPoints += points;
+      teamScores[team].drivers.push({ driver: r.driver, position: pos, points });
+      if (pos < teamScores[team].bestPosition) {
+        teamScores[team].bestPosition = pos;
+        teamScores[team].bestDriver = r.driver;
+        teamScores[team].bestName = r.name || r.driver;
+      }
+    });
+    const sorted = Object.values(teamScores).sort((a, b) => b.totalPoints - a.totalPoints);
+    return sorted[0] || null;
+  };
+
+  const actualRaceWinner = getActualConstructorWinner(actualRaceResults);
+  const actualQualiWinner = getActualConstructorWinner(actualQualiResults);
+  const hasRaceResults = actualRaceResults && actualRaceResults.length > 0;
+  const hasQualiResults = actualQualiResults && actualQualiResults.length > 0;
 
   const getShortName = (name) => {
     if (!name) return '—';
@@ -343,60 +378,112 @@ export default function Constructors() {
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><div className="f1-spinner" /></div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-            {/* Race Winner Constructor */}
+            {/* Race Winner Constructor — Predicted vs Actual */}
             <div className="card" style={{ borderTop: '3px solid var(--f1-red)' }}>
-              <p style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent-gold-dim)', fontWeight: 700, letterSpacing: '0.15em', marginBottom: '0.75rem' }}>
-                🏁 PREDICTED CONSTRUCTOR RACE WINNER
-              </p>
-              {raceWinnerTeam ? (
-                <>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: getTeamColor(raceWinnerTeam.team) }}>{raceWinnerTeam.team}</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    Best driver: <strong>{raceWinnerTeam.bestDriver}</strong> (P{raceWinnerTeam.bestPosition})
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {/* Predicted */}
+                <div style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239, 26, 45, 0.3)' }}>
+                  <p style={{ fontSize: '0.6rem', fontFamily: "'JetBrains Mono', monospace", color: 'var(--f1-red)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                    🏎 PREDICTED RACE WINNER
                   </p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                    Combined points: <strong style={{ color: 'var(--accent-gold-dim)' }}>{raceWinnerTeam.totalPoints} pts</strong>
-                  </p>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    {raceWinnerTeam.drivers.map(d => (
-                      <div key={d.driver} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)' }}>
-                        {getPhoto(d.driver) && <img src={getPhoto(d.driver)} alt={d.driver} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />}
-                        <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{d.driver} P{d.position}</span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>{d.points}pts</span>
+                  {raceWinnerTeam ? (
+                    <>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: getTeamColor(raceWinnerTeam.team) }}>{raceWinnerTeam.team}</h3>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Best: <strong>{raceWinnerTeam.bestDriver}</strong> P{raceWinnerTeam.bestPosition} · <span style={{ color: 'var(--accent-gold-dim)' }}>{raceWinnerTeam.totalPoints}pts</span>
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                        {raceWinnerTeam.drivers.map(d => (
+                          <span key={d.driver} style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                            {d.driver} P{d.position} · {d.points}pts
+                          </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {raceWinnerTeam.reasoning && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', fontStyle: 'italic' }}>"{raceWinnerTeam.reasoning}"</p>
-                  )}
-                </>
-              ) : <p style={{ color: 'var(--text-dim)' }}>Loading...</p>}
+                    </>
+                  ) : <p style={{ color: 'var(--text-dim)' }}>Loading...</p>}
+                </div>
+                {/* Actual */}
+                <div style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                  <p style={{ fontSize: '0.6rem', fontFamily: "'JetBrains Mono', monospace", color: '#22c55e', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                    🏁 ACTUAL RACE WINNER
+                  </p>
+                  {hasRaceResults && actualRaceWinner ? (
+                    <>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: getTeamColor(actualRaceWinner.team) }}>{actualRaceWinner.team}</h3>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Winner: <strong>{actualRaceWinner.bestDriver}</strong> P{actualRaceWinner.bestPosition} · <span style={{ color: '#22c55e' }}>{actualRaceWinner.totalPoints}pts</span>
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                        {actualRaceWinner.drivers.map(d => (
+                          <span key={d.driver} style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                            {d.driver} P{d.position} · {d.points}pts
+                          </span>
+                        ))}
+                      </div>
+                      {raceWinnerTeam && raceWinnerTeam.team === actualRaceWinner.team && (
+                        <p style={{ fontSize: '0.7rem', color: '#22c55e', marginTop: '0.5rem', fontWeight: 700 }}>✓ PREDICTION CORRECT</p>
+                      )}
+                      {raceWinnerTeam && raceWinnerTeam.team !== actualRaceWinner.team && (
+                        <p style={{ fontSize: '0.7rem', color: '#ef4444', marginTop: '0.5rem', fontWeight: 700 }}>✗ PREDICTED: {raceWinnerTeam.team}</p>
+                      )}
+                    </>
+                  ) : <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>⏳ Race not completed yet</p>}
+                </div>
+              </div>
             </div>
 
-            {/* Qualifying Winner Constructor */}
+            {/* Qualifying Winner Constructor — Predicted vs Actual */}
             <div className="card" style={{ borderTop: '3px solid #3b82f6' }}>
-              <p style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", color: '#3b82f6', fontWeight: 700, letterSpacing: '0.15em', marginBottom: '0.75rem' }}>
-                ⏱ PREDICTED CONSTRUCTOR QUALIFYING WINNER
-              </p>
-              {qualiWinnerTeam ? (
-                <>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: getTeamColor(qualiWinnerTeam.team) }}>{qualiWinnerTeam.team}</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    Pole sitter: <strong>{qualiWinnerTeam.bestDriver}</strong> (P{qualiWinnerTeam.bestPosition})
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {/* Predicted */}
+                <div style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                  <p style={{ fontSize: '0.6rem', fontFamily: "'JetBrains Mono', monospace", color: '#3b82f6', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                    ⏱ PREDICTED QUALI WINNER
                   </p>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    {qualiWinnerTeam.drivers.map(d => (
-                      <div key={d.driver} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)' }}>
-                        {getPhoto(d.driver) && <img src={getPhoto(d.driver)} alt={d.driver} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />}
-                        <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{d.driver} P{d.position}</span>
+                  {qualiWinnerTeam ? (
+                    <>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: getTeamColor(qualiWinnerTeam.team) }}>{qualiWinnerTeam.team}</h3>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Pole: <strong>{qualiWinnerTeam.bestDriver}</strong> P{qualiWinnerTeam.bestPosition}
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                        {qualiWinnerTeam.drivers.map(d => (
+                          <span key={d.driver} style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                            {d.driver} P{d.position}
+                          </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {qualiWinnerTeam.reasoning && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', fontStyle: 'italic' }}>"{qualiWinnerTeam.reasoning}"</p>
-                  )}
-                </>
-              ) : <p style={{ color: 'var(--text-dim)' }}>Loading...</p>}
+                    </>
+                  ) : <p style={{ color: 'var(--text-dim)' }}>Loading...</p>}
+                </div>
+                {/* Actual */}
+                <div style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                  <p style={{ fontSize: '0.6rem', fontFamily: "'JetBrains Mono', monospace", color: '#22c55e', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                    ✓ ACTUAL QUALI WINNER
+                  </p>
+                  {hasQualiResults && actualQualiWinner ? (
+                    <>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: getTeamColor(actualQualiWinner.team) }}>{actualQualiWinner.team}</h3>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Pole: <strong>{actualQualiWinner.bestDriver}</strong> P{actualQualiWinner.bestPosition}
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                        {actualQualiWinner.drivers.map(d => (
+                          <span key={d.driver} style={{ fontSize: '0.65rem', fontFamily: "'JetBrains Mono', monospace", padding: '0.2rem 0.4rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                            {d.driver} P{d.position}
+                          </span>
+                        ))}
+                      </div>
+                      {qualiWinnerTeam && qualiWinnerTeam.team === actualQualiWinner.team && (
+                        <p style={{ fontSize: '0.7rem', color: '#22c55e', marginTop: '0.5rem', fontWeight: 700 }}>✓ PREDICTION CORRECT</p>
+                      )}
+                      {qualiWinnerTeam && qualiWinnerTeam.team !== actualQualiWinner.team && (
+                        <p style={{ fontSize: '0.7rem', color: '#ef4444', marginTop: '0.5rem', fontWeight: 700 }}>✗ PREDICTED: {qualiWinnerTeam.team}</p>
+                      )}
+                    </>
+                  ) : <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>⏳ Qualifying not completed yet</p>}
+                </div>
+              </div>
             </div>
           </div>
         )}

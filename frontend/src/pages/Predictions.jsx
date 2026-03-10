@@ -297,8 +297,8 @@ export default function Predictions() {
                         <td>
                           {actualPos && diff !== null ? (
                             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '0.75rem',
-                              color: diff === 0 ? '#22c55e' : diff > 0 ? '#ef4444' : 'var(--accent-gold-dim)' }}>
-                              {diff === 0 ? '✓' : diff > 0 ? `↓${diff}` : `↑${Math.abs(diff)}`}
+                              color: diff === 0 ? '#22c55e' : diff > 0 ? '#22c55e' : '#ef4444' }}>
+                              {diff === 0 ? '✓' : diff > 0 ? `↑${diff}` : `↓${Math.abs(diff)}`}
                             </span>
                           ) : <span style={{ color: 'var(--text-dim)' }}>—</span>}
                         </td>
