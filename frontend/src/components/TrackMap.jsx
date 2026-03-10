@@ -70,8 +70,9 @@ export default function TrackMap({ trackData, positionData }) {
 
   // ─── Get point on track at a given fraction (0-1) ───
   const getPointOnTrack = useCallback((fraction) => {
-    if (pathPoints.length === 0) return { x: 0, y: 0 };
-    const targetDist = (fraction % 1) * totalLength;
+    // Normalize fraction to [0, 1) — JS % is broken for negatives
+    const f = ((fraction % 1) + 1) % 1;
+    const targetDist = f * totalLength;
     for (let i = 1; i < pathPoints.length; i++) {
       if (pathPoints[i].dist >= targetDist) {
         const prev = pathPoints[i - 1];
