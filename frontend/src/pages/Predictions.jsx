@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getPredictions, getQualifyingPredictions, getSprintPredictions, getRaceSchedule, getDriverPhotos, getRaceResults, getQualifyingResults } from '../api';
 import { CURRENT_SEASON } from '../constants';
 
-const SESSION_TYPES = [
-  { key: 'qualifying', label: '⏱ Qualifying', icon: '⏱' },
-  { key: 'sprint', label: '🏃 Sprint', icon: '🏃' },
-  { key: 'race', label: '🏁 Race', icon: '🏁' },
-];
+// 2026 Sprint Weekends — only these rounds have sprint races
+const SPRINT_ROUNDS = new Set([2, 6, 7, 11, 14, 18]); // China, Miami, Canada, Britain, Netherlands, Singapore
 
 export default function Predictions() {
   const [prediction, setPrediction] = useState(null);
@@ -17,6 +14,8 @@ export default function Predictions() {
   const [photos, setPhotos] = useState({});
   const [actualResults, setActualResults] = useState(null);
 
+  const isSprintWeekend = SPRINT_ROUNDS.has(selectedRound);
+
   useEffect(() => {
     Promise.all([getRaceSchedule(CURRENT_SEASON), getDriverPhotos()])
       .then(([sched, photoData]) => {
@@ -24,6 +23,14 @@ export default function Predictions() {
         if (photoData) setPhotos(photoData);
       });
   }, []);
+
+  // Auto-reset to 'race' if on sprint tab and user selects non-sprint round
+  const handleRoundChange = (round) => {
+    setSelectedRound(round);
+    if (sessionType === 'sprint' && !SPRINT_ROUNDS.has(round)) {
+      setSessionType('race');
+    }
+  };
 
   // Fetch predictions + actual results when round or session changes
   useEffect(() => {
@@ -49,7 +56,6 @@ export default function Predictions() {
         if (data?.results?.length > 0) setActualResults(data.results);
       }).catch(() => {});
     }
-    // Sprint results would need a separate endpoint — skip for now
   }, [selectedRound, sessionType]);
 
   const getPhoto = (abbr) => photos[abbr]?.headshot_url || '';
@@ -117,7 +123,11 @@ export default function Predictions() {
 
       {/* Session Type Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        {SESSION_TYPES.map(s => (
+        {[
+          { key: 'qualifying', label: '⏱ Qualifying', icon: '⏱' },
+          ...(isSprintWeekend ? [{ key: 'sprint', label: '🏃 Sprint', icon: '🏃' }] : []),
+          { key: 'race', label: '🏁 Race', icon: '🏁' },
+        ].map(s => (
           <button key={s.key} onClick={() => setSessionType(s.key)}
             className={`tab-btn ${sessionType === s.key ? 'active' : ''}`}
             style={{
@@ -137,12 +147,12 @@ export default function Predictions() {
           const shortName = getShortName(race.name);
           const isPast = race.date && new Date(race.date) < new Date();
           return (
-            <button key={race.round} onClick={() => setSelectedRound(race.round)}
+            <button key={race.round} onClick={() => handleRoundChange(race.round)}
               className={`tab-btn ${isActive ? 'active' : ''}`}
               style={{ fontSize: '0.65rem', padding: '0.375rem 0.625rem', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.3, minWidth: '50px', opacity: isPast ? 1 : 0.7 }}
-              title={race.name}>
+              title={race.name + (SPRINT_ROUNDS.has(race.round) ? ' (Sprint Weekend)' : '')}>
               <span style={{ fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", fontSize: '0.55rem', opacity: 0.7 }}>
-                R{String(race.round).padStart(2, '0')} {isPast ? '✓' : ''}
+                R{String(race.round).padStart(2, '0')} {isPast ? '✓' : ''}{SPRINT_ROUNDS.has(race.round) ? ' 🏃' : ''}
               </span>
               <span style={{ fontWeight: 700, fontSize: '0.6rem', marginTop: '1px' }}>{shortName}</span>
             </button>
