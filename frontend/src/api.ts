@@ -141,6 +141,37 @@ export const getSprintPredictions = async (year, round) => {
     return null;
   }
 };
+// --- OpenF1 Live Data endpoints ---
+export const getOpenF1Session = () =>
+  cachedGet('openf1_session', async () => {
+    const response = await api.get('/openf1/session/latest');
+    return response.data;
+  }, 15000).catch(() => ({ session: null, is_live: false }));
+
+export const getOpenF1Locations = async () => {
+  try {
+    const response = await api.get('/openf1/location/latest');
+    return response.data;
+  } catch {
+    return { locations: [] };
+  }
+};
+
+export const getOpenF1Positions = async () => {
+  try {
+    const response = await api.get('/openf1/position/latest');
+    return response.data;
+  } catch {
+    return { positions: [] };
+  }
+};
+
+export const getOpenF1Drivers = (sessionKey = 'latest') =>
+  cachedGet(`openf1_drivers_${sessionKey}`, async () => {
+    const response = await api.get(`/openf1/drivers?session_key=${sessionKey}`);
+    return response.data;
+  }, 300000).catch(() => ({ drivers: [] }));
+
 // --- Health check ---
 export const getHealth = async () => {
   try {

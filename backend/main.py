@@ -18,9 +18,9 @@ except ImportError:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from backend.routers import race, drivers, predictions, track
+    from backend.routers import race, drivers, predictions, track, openf1
 except ImportError:
-    from routers import race, drivers, predictions, track
+    from routers import race, drivers, predictions, track, openf1
 
 app = FastAPI(
     title="Pitwall.ai",
@@ -54,6 +54,7 @@ app.include_router(race.router, prefix="/f1/api")
 app.include_router(drivers.router, prefix="/f1/api")
 app.include_router(predictions.router, prefix="/f1/api")
 app.include_router(track.router, prefix="/f1/api")
+app.include_router(openf1.router, prefix="/f1/api")
 
 
 # Cache-Control middleware: cache race data responses
@@ -62,7 +63,9 @@ async def add_cache_headers(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
     # Cache schedule for 1 hour, track data for 24h, results for 1h
-    if "/api/race/schedule/" in path:
+    if "/api/openf1/" in path:
+        response.headers["Cache-Control"] = "no-cache"  # Live data — no HTTP cache
+    elif "/api/race/schedule/" in path:
         response.headers["Cache-Control"] = "public, max-age=3600"
     elif "/api/race/" in path and "/track" in path:
         response.headers["Cache-Control"] = "public, max-age=86400"
