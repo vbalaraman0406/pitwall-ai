@@ -492,5 +492,45 @@ def get_driver_positions(year: int, round_num: int) -> dict:
         logger.error(f"Failed to get driver positions for {year} R{round_num}: {e}")
         raise
 
+def get_qualifying_results(year: int, round_num: int) -> list:
+    """Get qualifying results for a specific race."""
+    cache_key = f"qualifying_{year}_{round_num}"
+    if cache_key in _results_cache:
+        return _results_cache[cache_key]
+
+    try:
+        session = _load_session(year, round_num, "Q")
+        results = session.results
+        if results is None or results.empty:
+            return []
+
+        result_list = []
+        for _, row in results.iterrows():
+            q1 = None
+            q2 = None
+            q3 = None
+            if pd.notna(row.get("Q1")) and hasattr(row["Q1"], "total_seconds"):
+                q1 = round(row["Q1"].total_seconds(), 3)
+            if pd.notna(row.get("Q2")) and hasattr(row["Q2"], "total_seconds"):
+                q2 = round(row["Q2"].total_seconds(), 3)
+            if pd.notna(row.get("Q3")) and hasattr(row["Q3"], "total_seconds"):
+                q3 = round(row["Q3"].total_seconds(), 3)
+
+            result_list.append({
+                "position": int(row.get("Position", 0)) if pd.notna(row.get("Position")) else None,
+                "driver": str(row.get("Abbreviation", "")),
+                "driver_number": int(row.get("DriverNumber", 0)) if pd.notna(row.get("DriverNumber")) else None,
+                "team": str(row.get("TeamName", "")),
+                "q1": q1,
+                "q2": q2,
+                "q3": q3,
+            })
+
+        _results_cache[cache_key] = result_list
+        return result_list
+    except Exception as e:
+        logger.error(f"Failed to get qualifying results for {year} R{round_num}: {e}")
+        raise
+
 
 # DEPLOY_TIMESTAMP=1773016290

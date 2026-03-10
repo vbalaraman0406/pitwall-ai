@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 try:
-    from backend.data.fastf1_loader import get_schedule, get_race_results as load_race_results, get_race_laps as load_race_laps, get_tire_strategy
+    from backend.data.fastf1_loader import get_schedule, get_race_results as load_race_results, get_race_laps as load_race_laps, get_tire_strategy, get_qualifying_results as load_qualifying_results
 except ImportError:
-    from data.fastf1_loader import get_schedule, get_race_results as load_race_results, get_race_laps as load_race_laps, get_tire_strategy
+    from data.fastf1_loader import get_schedule, get_race_results as load_race_results, get_race_laps as load_race_laps, get_tire_strategy, get_qualifying_results as load_qualifying_results
 
 router = APIRouter(prefix="/race", tags=["race"])
 
@@ -48,3 +48,14 @@ async def race_strategy(year: int, round_num: int):
     except Exception as e:
         return JSONResponse(content={"detail": str(e)}, status_code=500)
 
+
+@router.get("/{year}/{round_num}/qualifying")
+async def qualifying_results(year: int, round_num: int):
+    """Get qualifying results for a specific race."""
+    try:
+        data = load_qualifying_results(year, round_num)
+        if not isinstance(data, list):
+            data = []
+        return {"results": data}
+    except Exception as e:
+        return JSONResponse(content={"detail": str(e)}, status_code=500)

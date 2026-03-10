@@ -46,6 +46,16 @@ export const getRaceStrategy = async (year, round) => {
   }
 };
 
+export const getQualifyingResults = async (year, round) => {
+  try {
+    const response = await api.get(`/race/${year}/${round}/qualifying`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching qualifying results:', error);
+    return { results: [] };
+  }
+};
+
 // --- Track visualization endpoints ---
 export const getTrackCoordinates = async (year, round) => {
   try {
