@@ -5,6 +5,9 @@ import RaceDashboard from "./pages/RaceDashboard";
 import DriverStats from "./pages/DriverStats";
 import Constructors from "./pages/Constructors";
 import Predictions from "./pages/Predictions";
+import TrackMapPage from "./pages/TrackMapPage";
+import Championship from "./pages/Championship";
+import HeadToHead from "./pages/HeadToHead";
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
           <Route path="/drivers" element={<DriverStats />} />
           <Route path="/constructors" element={<Constructors />} />
           <Route path="/predictions" element={<Predictions />} />
+          <Route path="/track-map" element={<TrackMapPage />} />
+          <Route path="/championship" element={<Championship />} />
+          <Route path="/head-to-head" element={<HeadToHead />} />
         </Routes>
       </Layout>
     </BrowserRouter>
@@ -23,3 +29,4 @@ function App() {
 }
 
 export default App;
+

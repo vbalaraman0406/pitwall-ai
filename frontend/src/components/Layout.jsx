@@ -7,6 +7,9 @@ const NAV_ITEMS = [
   { path: '/drivers', label: 'Drivers', icon: '🏎️' },
   { path: '/constructors', label: 'Constructors', icon: '🏗️' },
   { path: '/predictions', label: 'AI Predictions', icon: '🤖' },
+  { path: '/track-map', label: 'Track Map', icon: '🗺️' },
+  { path: '/championship', label: 'Championship', icon: '📊' },
+  { path: '/head-to-head', label: 'Head to Head', icon: '🏆' },
 ];
 
 export default function Layout({ children }) {

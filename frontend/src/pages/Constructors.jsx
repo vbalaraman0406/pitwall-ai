@@ -10,6 +10,7 @@ const CONSTRUCTORS = {
     aero: 'Excellent', founded: 1966, championships: 8, raceWins: 188,
     drivers: ['NOR', 'PIA'],
     color: '#FF8000', secondaryColor: '#47C7FC',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/mclaren-logo.png',
     strengths: 'Downforce and straight-line speed balance, excellent race pace',
     weakness: 'Tyre warm-up in cold conditions',
     season2026: 'Defending constructors\' champions with reigning WDC Norris and Piastri. The MCL61 is the benchmark.',
@@ -20,6 +21,7 @@ const CONSTRUCTORS = {
     aero: 'Excellent', founded: 1950, championships: 16, raceWins: 245,
     drivers: ['LEC', 'HAM'],
     color: '#E8002D', secondaryColor: '#FFEB3B',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/ferrari-logo.png',
     strengths: 'Power unit and traction, strong qualifying pace',
     weakness: 'High-speed corner stability under new regulations',
     season2026: 'The Hamilton-Leclerc dream pairing. Ferrari targets its first constructors\' title since 2008 with the strongest driver lineup on the grid.',
@@ -30,6 +32,7 @@ const CONSTRUCTORS = {
     aero: 'Very Good', founded: 2005, championships: 6, raceWins: 120,
     drivers: ['VER', 'HAD'],
     color: '#3671C6', secondaryColor: '#FFD700',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/red-bull-racing-logo.png',
     strengths: 'Low-drag efficiency and excellent race pace',
     weakness: 'Adapting to 2026 regulation reset, rookie teammate',
     season2026: 'Verstappen leads with rookie Hadjar. Red Bull aims to prove their aero philosophy translates to the new regulations.',
@@ -40,6 +43,7 @@ const CONSTRUCTORS = {
     aero: 'Very Good', founded: 2010, championships: 8, raceWins: 128,
     drivers: ['RUS', 'ANT'],
     color: '#27F4D2', secondaryColor: '#00A19C',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/mercedes-logo.png',
     strengths: 'Race pace consistency and power unit reliability',
     weakness: 'One-lap qualifying pace, young second driver',
     season2026: 'Post-Hamilton era begins with Russell as team leader alongside teenage sensation Antonelli.',
@@ -50,6 +54,7 @@ const CONSTRUCTORS = {
     aero: 'Good', founded: 2021, championships: 0, raceWins: 0,
     drivers: ['ALO', 'STR'],
     color: '#229971', secondaryColor: '#CEDC00',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/aston-martin-logo.png',
     strengths: 'High-speed stability, Newey influence on 2026 design',
     weakness: 'Low-speed corners and tyre warm-up',
     season2026: 'New Silverstone factory fully operational. Adrian Newey\'s first full design could be a dark horse.',
@@ -60,6 +65,7 @@ const CONSTRUCTORS = {
     aero: 'Good', founded: 1977, championships: 9, raceWins: 114,
     drivers: ['SAI', 'ALB'],
     color: '#64C4FF', secondaryColor: '#041E42',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/williams-logo.png',
     strengths: 'Straight-line speed and Mercedes PU integration',
     weakness: 'Midcorner balance and development budget',
     season2026: 'Sainz arrival signals serious ambition. Williams are investing heavily to return to the front.',
@@ -70,6 +76,7 @@ const CONSTRUCTORS = {
     aero: 'Average', founded: 1981, championships: 2, raceWins: 21,
     drivers: ['GAS', 'COL'],
     color: '#FF87BC', secondaryColor: '#0090FF',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/alpine-logo.png',
     strengths: 'Reliability and factory team resources',
     weakness: 'Overall pace gap to frontrunners, Renault PU behind',
     season2026: 'Alpine continue their renovation under Oakes. Gasly leads with exciting rookie Colapinto.',
@@ -80,6 +87,7 @@ const CONSTRUCTORS = {
     aero: 'Average', founded: 2016, championships: 0, raceWins: 0,
     drivers: ['OCO', 'BEA'],
     color: '#B6BABD', secondaryColor: '#E6002D',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/haas-logo.png',
     strengths: 'Ferrari power unit synergy and cost efficiency',
     weakness: 'Limited development budget and wind tunnel time',
     season2026: 'Komatsu\'s second full season as TP. Ocon and Bearman form a solid midfield partnership.',
@@ -90,6 +98,7 @@ const CONSTRUCTORS = {
     aero: 'Average', founded: 2006, championships: 0, raceWins: 2,
     drivers: ['LAW', 'LIN'],
     color: '#6692FF', secondaryColor: '#FFFFFF',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/rb-logo.png',
     strengths: 'Red Bull technology sharing and young driver development',
     weakness: 'Inconsistency between circuits and limited budget',
     season2026: 'Full youth movement: Lawson and teenage prodigy Lindblad form the youngest pairing on the grid.',
@@ -100,6 +109,7 @@ const CONSTRUCTORS = {
     aero: 'Developing', founded: 2026, championships: 0, raceWins: 0,
     drivers: ['HUL', 'BOR'],
     color: '#990000', secondaryColor: '#FFFFFF',
+    logo: 'https://media.formula1.com/content/dam/fom-website/teams/2025/kick-sauber-logo.png',
     strengths: 'Massive manufacturer investment and VW Group resources',
     weakness: 'Brand new power unit in first competitive season',
     season2026: 'First race as Audi (ex-Sauber). Binotto leads the rebuild with Hulkenberg\'s experience and Bortoleto\'s raw speed.',
@@ -110,6 +120,7 @@ const CONSTRUCTORS = {
     aero: 'Basic', founded: 2026, championships: 0, raceWins: 0,
     drivers: ['PER', 'BOT'],
     color: '#1E1E1E', secondaryColor: '#C4A747',
+    logo: '',
     strengths: 'GM/Cadillac backing and experienced drivers',
     weakness: 'Brand new team with no F1 heritage data',
     season2026: 'The 11th team joins F1 backed by General Motors. Perez and Bottas bring vital experience to the startup operation.',
@@ -267,8 +278,11 @@ export default function Constructors() {
                 </span>
               </div>
 
-              {/* Team name */}
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: team.color, marginBottom: '0.125rem' }}>{teamName}</h3>
+              {/* Team name + logo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.125rem' }}>
+                {team.logo && <img src={team.logo} alt={teamName} style={{ height: '24px', width: 'auto', objectFit: 'contain', filter: 'brightness(1.1)' }} onError={e => e.target.style.display = 'none'} />}
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: team.color }}>{teamName}</h3>
+              </div>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>{team.base}</p>
 
               {/* Quick stats */}
@@ -567,6 +581,7 @@ export default function Constructors() {
                     )}
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {CONSTRUCTORS[team.team]?.logo && <img src={CONSTRUCTORS[team.team].logo} alt={team.team} style={{ height: '20px', width: 'auto', objectFit: 'contain', filter: 'brightness(1.1)' }} onError={e => e.target.style.display = 'none'} />}
                         <div className="team-bar" style={{ background: getTeamColor(team.team) }} />
                         <span style={{ fontWeight: 700 }}>{team.team}</span>
                       </div>
