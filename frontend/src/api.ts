@@ -2,29 +2,35 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: '/f1/api',
-  timeout: 60000,
+  timeout: 120000, // 2 min for cold starts
 });
 
+// ──── In-memory response cache ────
+const _cache: Record<string, { data: any; ts: number }> = {};
+
+function cachedGet(key: string, fetcher: () => Promise<any>, ttlMs: number = 300000) {
+  const cached = _cache[key];
+  if (cached && Date.now() - cached.ts < ttlMs) {
+    return Promise.resolve(cached.data);
+  }
+  return fetcher().then(data => {
+    _cache[key] = { data, ts: Date.now() };
+    return data;
+  });
+}
+
 // --- Race endpoints ---
-export const getRaceSchedule = async (year) => {
-  try {
+export const getRaceSchedule = (year) =>
+  cachedGet(`schedule_${year}`, async () => {
     const response = await api.get(`/race/schedule/${year}`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching race schedule:', error);
-    return [];
-  }
-};
+  }, 3600000).catch(() => []);
 
-export const getRaceResults = async (year, round) => {
-  try {
+export const getRaceResults = (year, round) =>
+  cachedGet(`results_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/results`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching race results:', error);
-    return { results: [] };
-  }
-};
+  }, 1800000).catch(() => ({ results: [] }));
 
 export const getRaceLaps = async (year, round) => {
   try {
@@ -46,15 +52,11 @@ export const getRaceStrategy = async (year, round) => {
   }
 };
 
-export const getQualifyingResults = async (year, round) => {
-  try {
+export const getQualifyingResults = (year, round) =>
+  cachedGet(`quali_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/qualifying`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching qualifying results:', error);
-    return { results: [] };
-  }
-};
+  }, 1800000).catch(() => ({ results: [] }));
 
 // --- Track visualization endpoints ---
 export const getTrackCoordinates = async (year, round) => {
@@ -114,15 +116,11 @@ export const getDriverPhotos = async () => {
 };
 
 // --- Prediction endpoints ---
-export const getPredictions = async (year, round) => {
-  try {
+export const getPredictions = (year, round) =>
+  cachedGet(`pred_${year}_${round}`, async () => {
     const response = await api.get(`/predictions/${year}/${round}`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching predictions:', error);
-    return null;
-  }
-};
+  }, 300000).catch(() => null);
 
 export const getQualifyingPredictions = async (year, round) => {
   try {

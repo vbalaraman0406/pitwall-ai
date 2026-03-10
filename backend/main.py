@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, HTMLResponse
 
@@ -45,11 +46,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# GZip compression for all responses > 500 bytes
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 # Mount all routers under /f1/api
 app.include_router(race.router, prefix="/f1/api")
 app.include_router(drivers.router, prefix="/f1/api")
 app.include_router(predictions.router, prefix="/f1/api")
 app.include_router(track.router, prefix="/f1/api")
+
+
+# Cache-Control middleware: cache race data responses
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    # Cache schedule for 1 hour, track data for 24h, results for 1h
+    if "/api/race/schedule/" in path:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    elif "/api/race/" in path and "/track" in path:
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    elif "/api/race/" in path and ("/results" in path or "/qualifying" in path or "/laps" in path or "/strategy" in path or "/positions" in path):
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    elif "/api/drivers/photos" in path:
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    elif "/api/drivers/" in path:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    # Predictions: short cache (5 min) since they can change
+    elif "/api/predictions/" in path:
+        response.headers["Cache-Control"] = "public, max-age=300"
+    return response
 
 
 @app.get("/f1/api/health")
