@@ -9,3 +9,6 @@ build/
 .venv/
 venv/
 .DS_Store
+env_variables.yaml
+*.secret
+*.key
