@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getPredictions, getRaceSchedule, getDriverPhotos, getRaceResults } from '../api';
+import { CURRENT_SEASON } from '../constants';
 
 export default function Predictions() {
   const [prediction, setPrediction] = useState(null);
@@ -12,7 +13,7 @@ export default function Predictions() {
 
   useEffect(() => {
     Promise.all([
-      getRaceSchedule(2025),
+      getRaceSchedule(CURRENT_SEASON),
       getDriverPhotos(),
     ]).then(([sched, photoData]) => {
       if (Array.isArray(sched)) setSchedule(sched);
@@ -23,13 +24,13 @@ export default function Predictions() {
   useEffect(() => {
     setLoading(true);
     setActualResults(null);
-    getPredictions(2025, selectedRound).then(data => {
+    getPredictions(CURRENT_SEASON, selectedRound).then(data => {
       setPrediction(data);
       setLoading(false);
     });
     // Try to fetch actual race results (will 500 if race hasn't happened yet)
     setResultsLoading(true);
-    getRaceResults(2025, selectedRound).then(data => {
+    getRaceResults(CURRENT_SEASON, selectedRound).then(data => {
       if (data && data.results && data.results.length > 0) {
         setActualResults(data.results);
       }

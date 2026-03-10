@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getRaceSchedule, getDriverPhotos } from '../api';
+import { CURRENT_SEASON } from '../constants';
 
 const F1_FACTS = [
   "An F1 car can accelerate from 0-100mph and brake back to 0 in under 5 seconds",
@@ -23,7 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     Promise.all([
-      getRaceSchedule(2025),
+      getRaceSchedule(CURRENT_SEASON),
       getDriverPhotos(),
     ]).then(([schedData, photoData]) => {
       if (Array.isArray(schedData)) setSchedule(schedData);
@@ -87,12 +88,12 @@ export default function Home() {
           lineHeight: 1.8,
         }}>
           Deep analytics, live telemetry replays, AI-powered predictions, and comprehensive driver & team data.
-          Your ultimate pit wall companion for the 2025 season.
+          Your ultimate pit wall companion for the {CURRENT_SEASON} season.
         </p>
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
           {nextRace && (
-            <Link to={`/race/2025/${nextRace.round}`} className="btn-primary">
+            <Link to={`/race/${CURRENT_SEASON}/${nextRace.round}`} className="btn-primary">
               🏁 {nextRace.name || 'Latest Race'}
             </Link>
           )}
@@ -128,7 +129,7 @@ export default function Home() {
           { label: 'RACES', value: schedule.length || 24, color: 'var(--f1-red)' },
           { label: 'DRIVERS', value: 22, color: 'var(--accent-gold-dim)' },
           { label: 'TEAMS', value: 11, color: '#00D7B6' },
-          { label: 'SEASON', value: 2025, color: 'var(--text-primary)' },
+          { label: 'SEASON', value: CURRENT_SEASON, color: 'var(--text-primary)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ textAlign: 'center' }}>
             <p className="stat-value" style={{ color: stat.color }}>{stat.value}</p>
@@ -144,7 +145,7 @@ export default function Home() {
             icon: '🗺️',
             title: 'Track Map Replays',
             desc: 'Replay race action with animated driver positions on the real circuit layout using telemetry data.',
-            link: schedule.length > 0 ? `/race/2025/${schedule[0].round}` : '/race/2025/1',
+            link: schedule.length > 0 ? `/race/${CURRENT_SEASON}/${schedule[0].round}` : `/race/${CURRENT_SEASON}/1`,
             tag: 'TELEMETRY',
           },
           {
@@ -186,7 +187,7 @@ export default function Home() {
       {Object.keys(photos).length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>2025 Grid Spotlight</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{CURRENT_SEASON} Grid Spotlight</h2>
             <Link to="/drivers" style={{ fontSize: '0.8rem', color: 'var(--f1-red)', textDecoration: 'none', fontWeight: 600 }}>
               View All →
             </Link>
@@ -227,7 +228,7 @@ export default function Home() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            2025 Race Calendar
+            {CURRENT_SEASON} Race Calendar
           </h2>
           <span style={{
             fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace",
@@ -252,7 +253,7 @@ export default function Home() {
               return (
                 <Link
                   key={race.round}
-                  to={`/race/2025/${race.round}`}
+                  to={`/race/${CURRENT_SEASON}/${race.round}`}
                   className="card"
                   style={{
                     textDecoration: 'none', color: 'inherit',

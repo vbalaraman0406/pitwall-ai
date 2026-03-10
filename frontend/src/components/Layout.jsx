@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { CURRENT_SEASON } from '../constants';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
@@ -124,7 +125,7 @@ export default function Layout({ children }) {
               boxShadow: '0 0 6px rgba(34, 197, 94, 0.5)',
             }} />
             <span style={{ fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent-gold-dim)', fontWeight: 700 }}>
-              2025 SEASON
+              {CURRENT_SEASON} SEASON
             </span>
           </div>
           <p style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>

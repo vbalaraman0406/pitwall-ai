@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDrivers, getDriverStats, getDriverPhotos } from '../api';
+import { CURRENT_SEASON } from '../constants';
 
 // Comprehensive driver bio data — career stats as of 2025 season start
 const DRIVER_BIOS = {
@@ -37,7 +38,7 @@ export default function DriverStats() {
 
   useEffect(() => {
     Promise.all([
-      getDrivers(2025),
+      getDrivers(CURRENT_SEASON),
       getDriverPhotos(),
     ]).then(([driverData, photoData]) => {
       if (driverData && driverData.drivers) setDrivers(driverData.drivers);
@@ -50,7 +51,7 @@ export default function DriverStats() {
   useEffect(() => {
     if (!selectedDriver) return;
     setStatsLoading(true);
-    getDriverStats(2025, selectedDriver.abbreviation).then(data => {
+    getDriverStats(CURRENT_SEASON, selectedDriver.abbreviation).then(data => {
       setDriverStats(data);
       setStatsLoading(false);
     }).catch(() => setStatsLoading(false));
@@ -76,7 +77,7 @@ export default function DriverStats() {
       {/* Header */}
       <div>
         <p style={{ fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent-gold-dim)', fontWeight: 700, letterSpacing: '0.15em' }}>
-          2025 FORMULA 1 CHAMPIONSHIP
+          {CURRENT_SEASON} FORMULA 1 CHAMPIONSHIP
         </p>
         <h1 style={{ fontSize: '2.25rem', fontWeight: 900, letterSpacing: '-0.03em' }}>
           Drivers & <span style={{ color: 'var(--f1-red)' }}>Teams</span>
@@ -281,7 +282,7 @@ export default function DriverStats() {
                 {/* 2025 Season Stats */}
                 <div style={{ padding: '1.5rem 2.5rem' }}>
                   <h3 style={{ fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent-gold-dim)', fontWeight: 700, letterSpacing: '0.15em', marginBottom: '1rem' }}>
-                    2025 SEASON
+                    {CURRENT_SEASON} SEASON
                   </h3>
                   {statsLoading ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem' }}>

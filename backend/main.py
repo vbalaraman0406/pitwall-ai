@@ -7,6 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, HTMLResponse
 
+# Load .env file if present (local dev fallback)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
@@ -49,12 +56,27 @@ app.include_router(track.router, prefix="/f1/api")
 @app.get("/api/health")
 @app.get("/health")
 async def health():
+    gemini_key = os.environ.get("GEMINI_API_KEY", "")
     return {
         "status": "ok",
         "service": "pitwall-ai",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "timestamp": time.time(),
+        "gemini_configured": bool(gemini_key),
+        "gemini_key_prefix": gemini_key[:8] + "..." if len(gemini_key) > 8 else "NOT_SET",
     }
+
+
+@app.get("/f1/api/cache/clear")
+async def clear_cache():
+    """Clear all in-memory caches (predictions + FastF1 session data)."""
+    try:
+        from services.llm_prediction_service import _prediction_cache
+    except ImportError:
+        from backend.services.llm_prediction_service import _prediction_cache
+    count = len(_prediction_cache)
+    _prediction_cache.clear()
+    return {"status": "ok", "cleared_predictions": count}
 
 
 # --- Static SPA serving ---
