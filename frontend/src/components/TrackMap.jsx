@@ -36,7 +36,7 @@ export default function TrackMap({ trackData, positionData }) {
     const ys = coords.map(c => c.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const padding = (maxX - minX) * 0.18;
+    const padding = (maxX - minX) * 0.08;
     const width = maxX - minX + padding * 2;
     const height = maxY - minY + padding * 2;
     const sc = Math.max(width, height) / 100;
@@ -152,12 +152,12 @@ export default function TrackMap({ trackData, positionData }) {
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); lastTimeRef.current = null; };
   }, [isPlaying, speed, totalLaps]);
 
-  // Sizing
-  const dotR = scale * 2.2;
-  const pillW = scale * 6;
-  const pillH = scale * 2.4;
-  const fontSz = scale * 1.4;
-  const smallFontSz = scale * 1;
+  // Sizing — pills must fit inside track surface width
+  const dotR = scale * 1.6;
+  const pillW = scale * 4.5;
+  const pillH = scale * 1.8;
+  const fontSz = scale * 1.1;
+  const smallFontSz = scale * 0.8;
 
   if (!trackData || coords.length === 0) {
     return (
@@ -230,19 +230,19 @@ export default function TrackMap({ trackData, positionData }) {
       {/* ── Main area: Track + Leaderboard ── */}
       <div style={{ display: 'flex' }}>
         {/* Track SVG */}
-        <div style={{ flex: 1, padding: '0.75rem', background: '#060610', position: 'relative', minHeight: '420px' }}>
+        <div style={{ flex: 1, padding: '0.75rem', background: '#060610', position: 'relative', minHeight: '600px' }}>
           <svg ref={svgRef} viewBox={viewBox} style={{
-            width: '100%', height: '420px',
+            width: '100%', height: '600px',
             transform: trackData.rotation ? `rotate(${trackData.rotation}deg)` : undefined,
           }}>
             {/* Track glow */}
-            <path d={trackPath} fill="none" stroke="rgba(225,6,0,0.06)" strokeWidth={scale * 14} strokeLinejoin="round" />
+            <path d={trackPath} fill="none" stroke="rgba(225,6,0,0.06)" strokeWidth={scale * 16} strokeLinejoin="round" />
             {/* Track asphalt */}
-            <path d={trackPath} fill="none" stroke="#222230" strokeWidth={scale * 7} strokeLinejoin="round" strokeLinecap="round" />
-            {/* Track edge kerbs */}
-            <path d={trackPath} fill="none" stroke="#333344" strokeWidth={scale * 7.2} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={`${scale * 1.5} ${scale * 3}`} />
+            <path d={trackPath} fill="none" stroke="#222230" strokeWidth={scale * 10} strokeLinejoin="round" strokeLinecap="round" />
+            {/* Track edge white lines */}
+            <path d={trackPath} fill="none" stroke="#444454" strokeWidth={scale * 10.3} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={`${scale * 1.2} ${scale * 2.4}`} />
             {/* Center racing line */}
-            <path d={trackPath} fill="none" stroke="rgba(100,100,130,0.25)" strokeWidth={scale * 0.4} strokeLinejoin="round" />
+            <path d={trackPath} fill="none" stroke="rgba(100,100,130,0.2)" strokeWidth={scale * 0.3} strokeLinejoin="round" />
 
             {/* Start/Finish line */}
             {startPos && (
@@ -265,6 +265,21 @@ export default function TrackMap({ trackData, positionData }) {
                 )))}
                 <text x={0} y={scale * 2} textAnchor="middle" fill="white" fontSize={fontSz * 0.65}
                   fontFamily="'JetBrains Mono', monospace" fontWeight="700">S/F</text>
+              </g>
+            )}
+
+            {/* Pit Lane indicator (opposite side of S/F flag) */}
+            {startPos && (
+              <g transform={`translate(${startPos.x - Math.cos((startPos.angle + 90) * Math.PI / 180) * scale * 7}, ${startPos.y - Math.sin((startPos.angle + 90) * Math.PI / 180) * scale * 7})`}>
+                <rect x={-scale * 1.6} y={-scale * 0.8} width={scale * 3.2} height={scale * 1.6} rx={scale * 0.3}
+                  fill="rgba(34,197,94,0.15)" stroke="#22c55e" strokeWidth={scale * 0.12} />
+                <text x={0} y={scale * 0.1} textAnchor="middle" dominantBaseline="central"
+                  fill="#22c55e" fontSize={fontSz * 0.7} fontFamily="'JetBrains Mono', monospace" fontWeight="800">
+                  PIT
+                </text>
+                {/* Pit entry dashed line */}
+                <line x1={scale * 1.6} y1={0} x2={scale * 3.5} y2={0}
+                  stroke="#22c55e" strokeWidth={scale * 0.2} strokeDasharray={`${scale * 0.4} ${scale * 0.3}`} opacity="0.5" />
               </g>
             )}
 
@@ -351,6 +366,10 @@ export default function TrackMap({ trackData, positionData }) {
               <div style={{ width: '10px', height: '10px', border: '2px solid #FFD700', borderRadius: '50%' }} />
               <span>= Race Leader</span>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <div style={{ width: '10px', height: '6px', borderRadius: '2px', background: 'rgba(34,197,94,0.3)', border: '1px solid #22c55e' }} />
+              <span>= Pit Lane</span>
+            </div>
           </div>
         </div>
 
@@ -358,7 +377,7 @@ export default function TrackMap({ trackData, positionData }) {
         <div className="mobile-hide" style={{
           width: '210px', minWidth: '210px',
           borderLeft: '1px solid var(--border-default)',
-          background: 'var(--bg-card)', overflowY: 'auto', maxHeight: '465px',
+          background: 'var(--bg-card)', overflowY: 'auto', maxHeight: '640px',
         }}>
           <div style={{
             padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--border-default)',
