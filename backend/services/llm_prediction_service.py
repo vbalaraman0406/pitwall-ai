@@ -16,50 +16,113 @@ _prediction_cache: Dict[str, Any] = {}
 
 # ──────────────────────────── TEAM & DRIVER DATA ────────────────────────────
 
-# 2026 Car performance tiers (based on pre-season testing and early results)
+# 2026 Car performance tiers — UPDATED after Round 1 (Australian GP, March 8 2026)
+# Mercedes scored a dominant 1-2 (RUS P1, ANT P2), Ferrari strong (LEC P3, HAM P4),
+# McLaren solid (NOR P5), Red Bull underperformed (VER P6, HAD P15)
 TEAM_PERFORMANCE = {
-    "McLaren": {"tier": "A+", "car_rating": 9.5, "aero": "excellent", "power_unit": "Mercedes", "budget": "top", "strengths": "Downforce and straight-line speed balance", "weakness": "Tyre warm-up in cold conditions"},
-    "Ferrari": {"tier": "A+", "car_rating": 9.4, "aero": "excellent", "power_unit": "Ferrari", "budget": "top", "strengths": "Power unit and traction", "weakness": "High-speed corner stability"},
-    "Red Bull Racing": {"tier": "A", "car_rating": 9.2, "aero": "very good", "power_unit": "Honda RBPT", "budget": "top", "strengths": "Low-drag efficiency and race pace", "weakness": "Adapting to new regulations"},
-    "Mercedes": {"tier": "A", "car_rating": 9.0, "aero": "very good", "power_unit": "Mercedes", "budget": "top", "strengths": "Race pace consistency", "weakness": "One-lap qualifying pace"},
+    "Mercedes": {"tier": "A+", "car_rating": 9.6, "aero": "excellent", "power_unit": "Mercedes", "budget": "top", "strengths": "Dominant race pace, 1-2 finish in R01. Best overall package early 2026", "weakness": "Sustained development pace unknown"},
+    "Ferrari": {"tier": "A+", "car_rating": 9.4, "aero": "excellent", "power_unit": "Ferrari", "budget": "top", "strengths": "Power unit and traction, LEC P3 and HAM P4 in Melbourne", "weakness": "Couldn't match Mercedes race pace in R01"},
+    "McLaren": {"tier": "A", "car_rating": 9.2, "aero": "excellent", "power_unit": "Mercedes", "budget": "top", "strengths": "NOR P5 in R01, strong qualifying pace", "weakness": "Race pace gap to Mercedes in R01"},
+    "Red Bull Racing": {"tier": "A-", "car_rating": 8.8, "aero": "good", "power_unit": "Honda RBPT", "budget": "top", "strengths": "VER driver talent can extract more than the car offers", "weakness": "Significant pace deficit in R01 (VER P6), struggling with 2026 regs"},
     "Aston Martin": {"tier": "B+", "car_rating": 8.0, "aero": "good", "power_unit": "Honda RBPT", "budget": "upper-mid", "strengths": "High-speed stability", "weakness": "Low-speed corners"},
-    "Williams": {"tier": "B", "car_rating": 7.5, "aero": "good", "power_unit": "Mercedes", "budget": "midfield", "strengths": "Straight-line speed", "weakness": "Midcorner balance"},
-    "Alpine": {"tier": "B", "car_rating": 7.3, "aero": "average", "power_unit": "Renault", "budget": "midfield", "strengths": "Reliability", "weakness": "Overall pace"},
-    "Haas F1 Team": {"tier": "B-", "car_rating": 7.0, "aero": "average", "power_unit": "Ferrari", "budget": "lower-mid", "strengths": "Ferrari PU synergy", "weakness": "Development budget"},
-    "Racing Bulls": {"tier": "B-", "car_rating": 6.8, "aero": "average", "power_unit": "Honda RBPT", "budget": "lower-mid", "strengths": "Red Bull technology sharing", "weakness": "Inconsistency"},
-    "Audi": {"tier": "C+", "car_rating": 6.5, "aero": "developing", "power_unit": "Audi", "budget": "growing", "strengths": "New investment and resources", "weakness": "New PU development"},
-    "Cadillac": {"tier": "C", "car_rating": 6.0, "aero": "basic", "power_unit": "Ferrari", "budget": "entry-level", "strengths": "GM backing and resources", "weakness": "Brand new team, no F1 data"},
+    "Haas F1 Team": {"tier": "B", "car_rating": 7.5, "aero": "average", "power_unit": "Ferrari", "budget": "lower-mid", "strengths": "BEA P7 in R01, Ferrari PU synergy paying off", "weakness": "Development budget"},
+    "Racing Bulls": {"tier": "B", "car_rating": 7.3, "aero": "average", "power_unit": "Honda RBPT", "budget": "lower-mid", "strengths": "LIN P8 in R01, Red Bull technology sharing", "weakness": "Inconsistency"},
+    "Williams": {"tier": "B", "car_rating": 7.2, "aero": "good", "power_unit": "Mercedes", "budget": "midfield", "strengths": "Straight-line speed", "weakness": "Midcorner balance"},
+    "Audi": {"tier": "B-", "car_rating": 7.0, "aero": "developing", "power_unit": "Audi", "budget": "growing", "strengths": "BOR P9 in R01, new investment paying off", "weakness": "New PU still developing"},
+    "Alpine": {"tier": "B-", "car_rating": 6.8, "aero": "average", "power_unit": "Renault", "budget": "midfield", "strengths": "GAS P10 in R01", "weakness": "Overall pace deficit"},
+    "Cadillac": {"tier": "C", "car_rating": 6.0, "aero": "basic", "power_unit": "Ferrari", "budget": "entry-level", "strengths": "GM backing and resources", "weakness": "Brand new team, PER P19 in R01"},
 }
 
 # Driver performance data — ratings, strengths, qualifying ability, racecraft
 DRIVER_DATA = {
-    "NOR": {"name": "Lando Norris", "team": "McLaren", "overall": 95, "race_craft": 94, "qualifying": 96, "consistency": 93, "tyre_management": 92, "wet_weather": 90, "overtaking": 93, "form": "excellent", "championships": 1, "career_wins": 9},
-    "VER": {"name": "Max Verstappen", "team": "Red Bull Racing", "overall": 97, "race_craft": 98, "qualifying": 96, "consistency": 95, "tyre_management": 96, "wet_weather": 98, "overtaking": 97, "form": "excellent", "championships": 4, "career_wins": 63},
+    # UPDATED after R01 Australian GP results
+    "RUS": {"name": "George Russell", "team": "Mercedes", "overall": 95, "race_craft": 93, "qualifying": 94, "consistency": 93, "tyre_management": 92, "wet_weather": 88, "overtaking": 90, "form": "excellent", "championships": 0, "career_wins": 4},
+    "ANT": {"name": "Kimi Antonelli", "team": "Mercedes", "overall": 89, "race_craft": 87, "qualifying": 90, "consistency": 85, "tyre_management": 85, "wet_weather": 84, "overtaking": 86, "form": "excellent", "championships": 0, "career_wins": 0},
     "LEC": {"name": "Charles Leclerc", "team": "Ferrari", "overall": 93, "race_craft": 91, "qualifying": 97, "consistency": 88, "tyre_management": 90, "wet_weather": 87, "overtaking": 90, "form": "good", "championships": 0, "career_wins": 8},
     "HAM": {"name": "Lewis Hamilton", "team": "Ferrari", "overall": 94, "race_craft": 97, "qualifying": 95, "consistency": 96, "tyre_management": 98, "wet_weather": 97, "overtaking": 95, "form": "good", "championships": 7, "career_wins": 105},
-    "PIA": {"name": "Oscar Piastri", "team": "McLaren", "overall": 91, "race_craft": 89, "qualifying": 92, "consistency": 90, "tyre_management": 88, "wet_weather": 85, "overtaking": 88, "form": "excellent", "championships": 0, "career_wins": 3},
-    "RUS": {"name": "George Russell", "team": "Mercedes", "overall": 91, "race_craft": 88, "qualifying": 94, "consistency": 90, "tyre_management": 89, "wet_weather": 88, "overtaking": 87, "form": "good", "championships": 0, "career_wins": 3},
-    "ANT": {"name": "Kimi Antonelli", "team": "Mercedes", "overall": 85, "race_craft": 83, "qualifying": 87, "consistency": 80, "tyre_management": 82, "wet_weather": 84, "overtaking": 84, "form": "promising", "championships": 0, "career_wins": 0},
+    "NOR": {"name": "Lando Norris", "team": "McLaren", "overall": 95, "race_craft": 94, "qualifying": 96, "consistency": 93, "tyre_management": 92, "wet_weather": 90, "overtaking": 93, "form": "good", "championships": 1, "career_wins": 9},
+    "VER": {"name": "Max Verstappen", "team": "Red Bull Racing", "overall": 97, "race_craft": 98, "qualifying": 96, "consistency": 95, "tyre_management": 96, "wet_weather": 98, "overtaking": 97, "form": "struggling", "championships": 4, "career_wins": 63},
+    "PIA": {"name": "Oscar Piastri", "team": "McLaren", "overall": 91, "race_craft": 89, "qualifying": 92, "consistency": 90, "tyre_management": 88, "wet_weather": 85, "overtaking": 88, "form": "good", "championships": 0, "career_wins": 3},
+    "BEA": {"name": "Oliver Bearman", "team": "Haas F1 Team", "overall": 79, "race_craft": 77, "qualifying": 80, "consistency": 76, "tyre_management": 75, "wet_weather": 73, "overtaking": 77, "form": "good", "championships": 0, "career_wins": 0},
+    "LIN": {"name": "Arvid Lindblad", "team": "Racing Bulls", "overall": 77, "race_craft": 76, "qualifying": 78, "consistency": 74, "tyre_management": 73, "wet_weather": 75, "overtaking": 77, "form": "good", "championships": 0, "career_wins": 0},
+    "BOR": {"name": "Gabriel Bortoleto", "team": "Audi", "overall": 77, "race_craft": 76, "qualifying": 77, "consistency": 75, "tyre_management": 74, "wet_weather": 72, "overtaking": 75, "form": "good", "championships": 0, "career_wins": 0},
+    "GAS": {"name": "Pierre Gasly", "team": "Alpine", "overall": 84, "race_craft": 85, "qualifying": 84, "consistency": 83, "tyre_management": 82, "wet_weather": 83, "overtaking": 83, "form": "average", "championships": 0, "career_wins": 1},
     "ALO": {"name": "Fernando Alonso", "team": "Aston Martin", "overall": 90, "race_craft": 96, "qualifying": 88, "consistency": 94, "tyre_management": 97, "wet_weather": 95, "overtaking": 93, "form": "steady", "championships": 2, "career_wins": 32},
     "SAI": {"name": "Carlos Sainz", "team": "Williams", "overall": 89, "race_craft": 90, "qualifying": 88, "consistency": 91, "tyre_management": 91, "wet_weather": 86, "overtaking": 87, "form": "good", "championships": 0, "career_wins": 4},
     "ALB": {"name": "Alexander Albon", "team": "Williams", "overall": 85, "race_craft": 86, "qualifying": 83, "consistency": 87, "tyre_management": 88, "wet_weather": 84, "overtaking": 85, "form": "steady", "championships": 0, "career_wins": 0},
-    "GAS": {"name": "Pierre Gasly", "team": "Alpine", "overall": 84, "race_craft": 85, "qualifying": 84, "consistency": 83, "tyre_management": 82, "wet_weather": 83, "overtaking": 83, "form": "average", "championships": 0, "career_wins": 1},
     "HUL": {"name": "Nico Hulkenberg", "team": "Audi", "overall": 82, "race_craft": 83, "qualifying": 84, "consistency": 82, "tyre_management": 83, "wet_weather": 80, "overtaking": 78, "form": "steady", "championships": 0, "career_wins": 0},
-    "LAW": {"name": "Liam Lawson", "team": "Racing Bulls", "overall": 80, "race_craft": 79, "qualifying": 81, "consistency": 78, "tyre_management": 77, "wet_weather": 80, "overtaking": 80, "form": "developing", "championships": 0, "career_wins": 0},
-    "HAD": {"name": "Isack Hadjar", "team": "Red Bull Racing", "overall": 78, "race_craft": 76, "qualifying": 80, "consistency": 75, "tyre_management": 74, "wet_weather": 76, "overtaking": 77, "form": "rookie", "championships": 0, "career_wins": 0},
-    "STR": {"name": "Lance Stroll", "team": "Aston Martin", "overall": 78, "race_craft": 77, "qualifying": 76, "consistency": 79, "tyre_management": 80, "wet_weather": 82, "overtaking": 74, "form": "average", "championships": 0, "career_wins": 0},
     "OCO": {"name": "Esteban Ocon", "team": "Haas F1 Team", "overall": 81, "race_craft": 80, "qualifying": 82, "consistency": 80, "tyre_management": 79, "wet_weather": 81, "overtaking": 78, "form": "steady", "championships": 0, "career_wins": 1},
-    "BEA": {"name": "Oliver Bearman", "team": "Haas F1 Team", "overall": 76, "race_craft": 74, "qualifying": 77, "consistency": 73, "tyre_management": 72, "wet_weather": 73, "overtaking": 75, "form": "developing", "championships": 0, "career_wins": 0},
+    "LAW": {"name": "Liam Lawson", "team": "Racing Bulls", "overall": 80, "race_craft": 79, "qualifying": 81, "consistency": 78, "tyre_management": 77, "wet_weather": 80, "overtaking": 80, "form": "developing", "championships": 0, "career_wins": 0},
+    "STR": {"name": "Lance Stroll", "team": "Aston Martin", "overall": 78, "race_craft": 77, "qualifying": 76, "consistency": 79, "tyre_management": 80, "wet_weather": 82, "overtaking": 74, "form": "average", "championships": 0, "career_wins": 0},
     "COL": {"name": "Franco Colapinto", "team": "Alpine", "overall": 75, "race_craft": 74, "qualifying": 76, "consistency": 72, "tyre_management": 73, "wet_weather": 71, "overtaking": 74, "form": "developing", "championships": 0, "career_wins": 0},
-    "BOR": {"name": "Gabriel Bortoleto", "team": "Audi", "overall": 74, "race_craft": 73, "qualifying": 75, "consistency": 72, "tyre_management": 71, "wet_weather": 70, "overtaking": 73, "form": "rookie", "championships": 0, "career_wins": 0},
-    "LIN": {"name": "Arvid Lindblad", "team": "Racing Bulls", "overall": 73, "race_craft": 72, "qualifying": 74, "consistency": 70, "tyre_management": 69, "wet_weather": 72, "overtaking": 74, "form": "rookie", "championships": 0, "career_wins": 0},
-    "PER": {"name": "Sergio Perez", "team": "Cadillac", "overall": 80, "race_craft": 82, "qualifying": 78, "consistency": 76, "tyre_management": 85, "wet_weather": 80, "overtaking": 79, "form": "declining", "championships": 0, "career_wins": 6},
-    "BOT": {"name": "Valtteri Bottas", "team": "Cadillac", "overall": 78, "race_craft": 77, "qualifying": 80, "consistency": 80, "tyre_management": 82, "wet_weather": 78, "overtaking": 72, "form": "steady", "championships": 0, "career_wins": 10},
+    "HAD": {"name": "Isack Hadjar", "team": "Red Bull Racing", "overall": 75, "race_craft": 73, "qualifying": 77, "consistency": 72, "tyre_management": 71, "wet_weather": 73, "overtaking": 74, "form": "struggling", "championships": 0, "career_wins": 0},
+    "PER": {"name": "Sergio Perez", "team": "Cadillac", "overall": 78, "race_craft": 80, "qualifying": 76, "consistency": 74, "tyre_management": 83, "wet_weather": 78, "overtaking": 77, "form": "declining", "championships": 0, "career_wins": 6},
+    "BOT": {"name": "Valtteri Bottas", "team": "Cadillac", "overall": 77, "race_craft": 76, "qualifying": 79, "consistency": 79, "tyre_management": 81, "wet_weather": 77, "overtaking": 71, "form": "steady", "championships": 0, "career_wins": 10},
 }
 
 
+# ──────────────────────────── ACTUAL SEASON RESULTS ────────────────────────────
+# This data feeds into prompts so the LLM can make informed predictions
+
+SEASON_RESULTS_2026 = {
+    1: {
+        "race_name": "Australian Grand Prix",
+        "circuit": "Albert Park, Melbourne",
+        "date": "2026-03-08",
+        "results": [
+            {"pos": 1, "driver": "RUS", "team": "Mercedes", "status": "Finished", "points": 25},
+            {"pos": 2, "driver": "ANT", "team": "Mercedes", "status": "Finished", "points": 18},
+            {"pos": 3, "driver": "LEC", "team": "Ferrari", "status": "Finished", "points": 15},
+            {"pos": 4, "driver": "HAM", "team": "Ferrari", "status": "Finished", "points": 12},
+            {"pos": 5, "driver": "NOR", "team": "McLaren", "status": "Finished", "points": 10},
+            {"pos": 6, "driver": "VER", "team": "Red Bull Racing", "status": "Finished", "points": 8},
+            {"pos": 7, "driver": "BEA", "team": "Haas F1 Team", "status": "Lapped", "points": 6},
+            {"pos": 8, "driver": "LIN", "team": "Racing Bulls", "status": "Lapped", "points": 4},
+            {"pos": 9, "driver": "BOR", "team": "Audi", "status": "Lapped", "points": 2},
+            {"pos": 10, "driver": "GAS", "team": "Alpine", "status": "Lapped", "points": 1},
+            {"pos": 11, "driver": "ALO", "team": "Aston Martin", "status": "Lapped", "points": 0},
+            {"pos": 12, "driver": "SAI", "team": "Williams", "status": "Lapped", "points": 0},
+            {"pos": 13, "driver": "ALB", "team": "Williams", "status": "Lapped", "points": 0},
+            {"pos": 14, "driver": "HUL", "team": "Audi", "status": "Lapped", "points": 0},
+            {"pos": 15, "driver": "HAD", "team": "Red Bull Racing", "status": "Lapped", "points": 0},
+            {"pos": 16, "driver": "OCO", "team": "Haas F1 Team", "status": "Lapped", "points": 0},
+            {"pos": 17, "driver": "COL", "team": "Alpine", "status": "Lapped", "points": 0},
+            {"pos": 18, "driver": "LAW", "team": "Racing Bulls", "status": "Lapped", "points": 0},
+            {"pos": 19, "driver": "PER", "team": "Cadillac", "status": "Lapped", "points": 0},
+            {"pos": 20, "driver": "STR", "team": "Aston Martin", "status": "Lapped", "points": 0},
+            {"pos": 21, "driver": "BOT", "team": "Cadillac", "status": "DNF", "points": 0},
+            {"pos": 99, "driver": "PIA", "team": "McLaren", "status": "DNS", "points": 0},
+        ],
+        "key_takeaways": [
+            "Mercedes dominant 1-2 — best car on the grid in R01",
+            "Ferrari solid but couldn't match Mercedes pace",
+            "Red Bull struggling — VER only P6 despite being 4x champion",
+            "Rookies ANT (P2!) and BEA (P7) impressed massively",
+            "PIA DNS due to pre-race issue — no data on McLaren race pace",
+        ],
+    }
+}
+
+
+def _season_results_summary(up_to_round: int) -> str:
+    """Build a text summary of season results up to (but not including) the given round."""
+    lines = []
+    for rnd in sorted(SEASON_RESULTS_2026.keys()):
+        if rnd >= up_to_round:
+            break
+        data = SEASON_RESULTS_2026[rnd]
+        lines.append(f"\nRound {rnd} — {data['race_name']} ({data['date']}):")
+        for r in data["results"][:10]:
+            lines.append(f"  P{r['pos']}: {r['driver']} ({r['team']}) — {r['status']}")
+        if data.get("key_takeaways"):
+            lines.append("  Key takeaways:")
+            for t in data["key_takeaways"]:
+                lines.append(f"    - {t}")
+    return "\n".join(lines) if lines else "No completed races yet this season."
+
+
 def _get_cache_key(year: int, round_num: int, session_type: str, context_hash: str = "") -> str:
-    raw = f"pred_{session_type}_{year}_{round_num}_{context_hash}"
+    raw = f"pred_v2_{session_type}_{year}_{round_num}_{context_hash}"  # v2 to bust old caches
     return hashlib.md5(raw.encode()).hexdigest()
 
 
@@ -84,20 +147,26 @@ def _driver_summary():
 
 
 def _build_race_prompt(year, round_num, race_name, qualifying_data, recent_results):
+    season_context = _season_results_summary(round_num)
     prompt = f"""You are an expert Formula 1 data analyst and race strategist. Predict the RACE finishing order for the {year} Formula 1 Season, Round {round_num}{f' ({race_name})' if race_name else ''}.
 
 TASK: Predict the top 20 finishing positions for this RACE. For each driver provide position, confidence %, and 1-sentence reasoning.
 
-CAR PERFORMANCE TIERS (2026 season):
+IMPORTANT: Base your predictions on ACTUAL RESULTS from earlier rounds this season, not just pre-season expectations. The actual race results below show the TRUE competitive order.
+
+ACTUAL 2026 SEASON RESULTS SO FAR:
+{season_context}
+
+CAR PERFORMANCE TIERS (updated based on actual 2026 results):
 {_team_tier_summary()}
 
-DRIVER RATINGS & FORM:
+DRIVER RATINGS & CURRENT FORM:
 {_driver_summary()}
 """
     if qualifying_data:
-        prompt += f"\nQUALIFYING RESULTS (starting grid): {json.dumps(qualifying_data[:10], indent=2)}"
+        prompt += f"\nQUALIFYING RESULTS (starting grid) FOR THIS RACE: {json.dumps(qualifying_data[:10], indent=2)}"
     if recent_results:
-        prompt += f"\nPREVIOUS RACE RESULTS: {json.dumps(recent_results[:10], indent=2)}"
+        prompt += f"\nMOST RECENT RACE RESULTS: {json.dumps(recent_results[:10], indent=2)}"
 
     prompt += f"""
 
@@ -130,18 +199,24 @@ RESPOND IN EXACTLY THIS JSON (no markdown, no code blocks, raw JSON only):
 
 
 def _build_qualifying_prompt(year, round_num, race_name, recent_results):
+    season_context = _season_results_summary(round_num)
     prompt = f"""You are an expert Formula 1 data analyst. Predict the QUALIFYING order for the {year} Season, Round {round_num}{f' ({race_name})' if race_name else ''}.
 
 TASK: Predict the Q3 top 10, Q2 eliminations (P11-15), and Q1 eliminations (P16-20+). For each driver provide predicted qualifying position, confidence %, session (Q3/Q2/Q1), and reasoning.
 
-CAR PERFORMANCE TIERS (qualifying-specific, low-fuel & maximum downforce):
+IMPORTANT: Base your predictions on ACTUAL RESULTS from earlier rounds this season, not just pre-season expectations.
+
+ACTUAL 2026 SEASON RESULTS SO FAR:
+{season_context}
+
+CAR PERFORMANCE TIERS (updated based on actual 2026 results, qualifying-specific):
 {_team_tier_summary()}
 
 DRIVER QUALIFYING ABILITIES:
 {_driver_summary()}
 """
     if recent_results:
-        prompt += f"\nPREVIOUS RACE RESULTS: {json.dumps(recent_results[:10], indent=2)}"
+        prompt += f"\nMOST RECENT RACE RESULTS: {json.dumps(recent_results[:10], indent=2)}"
 
     prompt += f"""
 

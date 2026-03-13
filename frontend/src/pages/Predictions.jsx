@@ -8,7 +8,7 @@ const SPRINT_ROUNDS = new Set([2, 6, 7, 11, 14, 18]); // China, Miami, Canada, B
 export default function Predictions() {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedRound, setSelectedRound] = useState(1);
+  const [selectedRound, setSelectedRound] = useState(null);
   const [sessionType, setSessionType] = useState('race');
   const [schedule, setSchedule] = useState([]);
   const [photos, setPhotos] = useState({});
@@ -19,7 +19,13 @@ export default function Predictions() {
   useEffect(() => {
     Promise.all([getRaceSchedule(CURRENT_SEASON), getDriverPhotos()])
       .then(([sched, photoData]) => {
-        if (Array.isArray(sched)) setSchedule(sched);
+        if (Array.isArray(sched) && sched.length > 0) {
+          setSchedule(sched);
+          // Auto-select the next upcoming (or most recent) race for predictions
+          const now = new Date();
+          const nextRace = sched.find(r => r.date && new Date(r.date) >= now);
+          setSelectedRound(nextRace ? nextRace.round : sched[sched.length - 1].round);
+        }
         if (photoData) setPhotos(photoData);
       });
   }, []);
@@ -34,6 +40,7 @@ export default function Predictions() {
 
   // Fetch predictions + actual results when round or session changes
   useEffect(() => {
+    if (!selectedRound) return;
     setLoading(true);
     setPrediction(null);
     setActualResults(null);
@@ -62,7 +69,10 @@ export default function Predictions() {
   const getTeamColor = (abbr) => photos[abbr]?.team_colour || '#888888';
   const raceInfo = schedule.find(r => r.round === selectedRound);
   const raceName = raceInfo?.name || `Round ${selectedRound}`;
-  const isCompleted = actualResults && actualResults.length > 0;
+  // Only mark as completed if race date is in the past AND we have actual results
+  const isRaceDatePast = raceInfo?.date && new Date(raceInfo.date) < new Date();
+  const isCompleted = isRaceDatePast && actualResults && actualResults.length > 0;
+  const isUpcoming = raceInfo?.date && new Date(raceInfo.date) >= new Date();
 
   const getShortName = (name) => {
     if (!name) return '—';
@@ -160,7 +170,7 @@ export default function Predictions() {
         })}
       </div>
 
-      {/* Completion + Accuracy Banner */}
+      {/* Completion + Accuracy Banner OR Upcoming Banner */}
       {isCompleted && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.25rem', background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: 'var(--radius-md)' }}>
           <span style={{ fontSize: '1.25rem' }}>🏁</span>
@@ -182,6 +192,20 @@ export default function Predictions() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {isUpcoming && !isCompleted && !loading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.25rem', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 'var(--radius-md)' }}>
+          <span style={{ fontSize: '1.25rem' }}>🔮</span>
+          <div>
+            <p style={{ fontWeight: 700, color: '#f59e0b', fontSize: '0.85rem' }}>UPCOMING RACE — PRE-RACE PREDICTION</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>This race hasn't happened yet. Showing AI-powered forecast.</p>
+          </div>
+          <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+            <p style={{ fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: "'JetBrains Mono', monospace" }}>
+              Race day: {raceInfo?.date ? new Date(raceInfo.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
+            </p>
+          </div>
         </div>
       )}
 
