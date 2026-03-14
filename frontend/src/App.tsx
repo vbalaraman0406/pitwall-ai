@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import { prefetchCriticalData } from "./api";
 
 // Lazy-load heavy pages for faster initial bundle
 const RaceDashboard = lazy(() => import("./pages/RaceDashboard"));
@@ -28,6 +29,9 @@ function PageLoader() {
 }
 
 function App() {
+  // Warm backend cache on first load — schedule, photos, and next race prediction
+  useEffect(() => { prefetchCriticalData(); }, []);
+
   return (
     <BrowserRouter basename="/f1">
       <Layout>

@@ -66,18 +66,18 @@ async def add_cache_headers(request: Request, call_next):
     if "/api/openf1/" in path:
         response.headers["Cache-Control"] = "no-cache"  # Live data — no HTTP cache
     elif "/api/race/schedule/" in path:
-        response.headers["Cache-Control"] = "public, max-age=3600"
+        response.headers["Cache-Control"] = "public, max-age=14400"  # 4 hours
     elif "/api/race/" in path and "/track" in path:
-        response.headers["Cache-Control"] = "public, max-age=86400"
+        response.headers["Cache-Control"] = "public, max-age=604800"  # 1 week - circuit shape never changes
     elif "/api/race/" in path and ("/results" in path or "/qualifying" in path or "/laps" in path or "/strategy" in path or "/positions" in path):
-        response.headers["Cache-Control"] = "public, max-age=3600"
+        response.headers["Cache-Control"] = "public, max-age=14400"  # 4 hours - past results don't change
     elif "/api/drivers/photos" in path:
         response.headers["Cache-Control"] = "public, max-age=86400"
     elif "/api/drivers/" in path:
         response.headers["Cache-Control"] = "public, max-age=3600"
     # Predictions: short cache (5 min) since they can change
     elif "/api/predictions/" in path:
-        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour
     return response
 
 

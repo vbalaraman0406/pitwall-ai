@@ -8,11 +8,25 @@ const api = axios.create({
 // ──── In-memory response cache ────
 const _cache: Record<string, { data: any; ts: number }> = {};
 
+/**
+ * Cache-first with stale-while-revalidate strategy.
+ * Returns cached data immediately if available (even if stale),
+ * and refreshes in the background if cache is older than ttlMs.
+ */
 function cachedGet(key: string, fetcher: () => Promise<any>, ttlMs: number = 300000) {
   const cached = _cache[key];
-  if (cached && Date.now() - cached.ts < ttlMs) {
+  if (cached) {
+    // If fresh, just return cached
+    if (Date.now() - cached.ts < ttlMs) {
+      return Promise.resolve(cached.data);
+    }
+    // If stale, return cached immediately BUT refresh in background
+    fetcher().then(data => {
+      _cache[key] = { data, ts: Date.now() };
+    }).catch(() => {});
     return Promise.resolve(cached.data);
   }
+  // No cache at all — must wait for fetch
   return fetcher().then(data => {
     _cache[key] = { data, ts: Date.now() };
     return data;
@@ -24,13 +38,13 @@ export const getRaceSchedule = (year) =>
   cachedGet(`schedule_${year}`, async () => {
     const response = await api.get(`/race/schedule/${year}`);
     return response.data;
-  }, 3600000).catch(() => []);
+  }, 7200000).catch(() => []);  // 2 hours — schedule rarely changes
 
 export const getRaceResults = (year, round) =>
   cachedGet(`results_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/results`);
     return response.data;
-  }, 1800000).catch(() => ({ results: [] }));
+  }, 7200000).catch(() => ({ results: [] }));  // 2 hours — past results don't change
 
 export const getRaceLaps = async (year, round) => {
   try {
@@ -56,28 +70,20 @@ export const getQualifyingResults = (year, round) =>
   cachedGet(`quali_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/qualifying`);
     return response.data;
-  }, 1800000).catch(() => ({ results: [] }));
+  }, 7200000).catch(() => ({ results: [] }));  // 2 hours
 
 // --- Track visualization endpoints ---
-export const getTrackCoordinates = async (year, round) => {
-  try {
+export const getTrackCoordinates = (year, round) =>
+  cachedGet(`track_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/track`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching track coordinates:', error);
-    return null;
-  }
-};
+  }, 86400000).catch(() => null);  // 24 hours — circuit shape never changes
 
-export const getDriverPositions = async (year, round) => {
-  try {
+export const getDriverPositions = (year, round) =>
+  cachedGet(`positions_${year}_${round}`, async () => {
     const response = await api.get(`/race/${year}/${round}/positions`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching driver positions:', error);
-    return null;
-  }
-};
+  }, 86400000).catch(() => null);  // 24 hours — past race positions don't change
 
 // --- Driver endpoints ---
 export const getDrivers = async (year) => {
@@ -120,28 +126,19 @@ export const getPredictions = (year, round) =>
   cachedGet(`pred_${year}_${round}`, async () => {
     const response = await api.get(`/predictions/${year}/${round}`);
     return response.data;
-  }, 300000).catch(() => null);
+  }, 1800000).catch(() => null);  // 30 min — predictions change less frequently
 
-export const getQualifyingPredictions = async (year, round) => {
-  try {
+export const getQualifyingPredictions = (year, round) =>
+  cachedGet(`predQ_${year}_${round}`, async () => {
     const response = await api.get(`/predictions/${year}/${round}/qualifying`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching qualifying predictions:', error);
-    return null;
-  }
-};
+  }, 1800000).catch(() => null);
 
-export const getSprintPredictions = async (year, round) => {
-  try {
+export const getSprintPredictions = (year, round) =>
+  cachedGet(`predS_${year}_${round}`, async () => {
     const response = await api.get(`/predictions/${year}/${round}/sprint`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching sprint predictions:', error);
-    return null;
-  }
-};
-// --- OpenF1 Live Data endpoints ---
+  }, 1800000).catch(() => null);// --- OpenF1 Live Data endpoints ---
 export const getOpenF1Session = () =>
   cachedGet('openf1_session', async () => {
     const response = await api.get('/openf1/session/latest');
@@ -184,3 +181,16 @@ export const getHealth = async () => {
 };
 
 export default api;
+
+/**
+ * Prefetch critical data on app startup to warm the backend cache.
+ * This triggers the backend to load data from FastF1 / disk before the user navigates.
+ * Called once from App.tsx on mount.
+ */
+export function prefetchCriticalData(year = 2026) {
+  // Fire-and-forget: schedule + driver photos (needed on most pages)
+  getRaceSchedule(year);
+  getDriverPhotos();
+  // Warm the prediction for round 2 (next race) in the background
+  getPredictions(year, 2);
+}

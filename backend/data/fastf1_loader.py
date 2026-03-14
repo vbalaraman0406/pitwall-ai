@@ -1,8 +1,9 @@
 # DEPLOY_HASH_1773005488_85731
 # DEPLOY_TS: 1773005348.636301
 # FORCE_DEPLOY_1773001630.888818
-"""FastF1 data loader with caching and error handling"""
+"""FastF1 data loader with multi-layer caching (memory + disk) and error handling"""
 import os
+import json
 import fastf1
 import pandas as pd
 import logging
@@ -19,13 +20,65 @@ try:
 except Exception as e:
     logger.warning(f"Could not enable fastf1 cache: {e}")
 
-# In-memory cache for processed results
+# ── Disk-based JSON cache for processed results ──
+# This survives across requests within the same GAE instance
+# and even partial cold starts (since /tmp persists for instance lifetime)
+DISK_CACHE_DIR = "/tmp/pitwall_cache"
+try:
+    os.makedirs(DISK_CACHE_DIR, exist_ok=True)
+except Exception:
+    pass
+
+
+def _disk_cache_get(key: str):
+    """Try to read a cached JSON result from disk."""
+    path = os.path.join(DISK_CACHE_DIR, f"{key}.json")
+    try:
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.debug(f"Disk cache miss for {key}: {e}")
+    return None
+
+
+def _disk_cache_set(key: str, data):
+    """Write a processed result to disk cache as JSON."""
+    path = os.path.join(DISK_CACHE_DIR, f"{key}.json")
+    try:
+        with open(path, "w") as f:
+            json.dump(data, f, separators=(",", ":"))  # compact JSON
+    except Exception as e:
+        logger.warning(f"Failed to write disk cache for {key}: {e}")
+
+
+# In-memory cache for processed results (fastest, but lost on cold start)
 _session_cache: Dict[str, Any] = {}
 _results_cache: Dict[str, Any] = {}
 
 
+def _get_cached(cache_key: str):
+    """Multi-layer cache read: memory → disk → None."""
+    # Layer 1: in-memory
+    if cache_key in _results_cache:
+        return _results_cache[cache_key]
+    # Layer 2: disk
+    disk_data = _disk_cache_get(cache_key)
+    if disk_data is not None:
+        _results_cache[cache_key] = disk_data  # promote to memory
+        return disk_data
+    return None
+
+
+def _set_cached(cache_key: str, data):
+    """Write to both memory and disk cache."""
+    _results_cache[cache_key] = data
+    _disk_cache_set(cache_key, data)
+
+
 def _get_cache_key(year: int, round_num: int, session_type: str = "R") -> str:
     return f"{year}_{round_num}_{session_type}"
+
 
 
 def _load_session(year: int, round_num: int, session_type: str = "R"):
@@ -47,8 +100,9 @@ def _load_session(year: int, round_num: int, session_type: str = "R"):
 def get_race_results(year: int, round_num: int) -> list:
     """Get race results for a specific race."""
     cache_key = f"results_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
     
     try:
         session = _load_session(year, round_num)
@@ -67,7 +121,7 @@ def get_race_results(year: int, round_num: int) -> list:
                 "points": float(row.get("Points", 0)) if pd.notna(row.get("Points")) else 0,
             })
         
-        _results_cache[cache_key] = result_list
+        _set_cached(cache_key, result_list)
         return result_list
     except Exception as e:
         logger.error(f"Failed to get race results for {year} R{round_num}: {e}")
@@ -77,8 +131,9 @@ def get_race_results(year: int, round_num: int) -> list:
 def get_race_laps(year: int, round_num: int) -> list:
     """Get lap data for a specific race with robust error handling."""
     cache_key = f"laps_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
     
     try:
         session = _load_session(year, round_num)
@@ -111,7 +166,7 @@ def get_race_laps(year: int, round_num: int) -> list:
                 logger.warning(f"Skipping malformed lap data: {e}")
                 continue
         
-        _results_cache[cache_key] = lap_list
+        _set_cached(cache_key, lap_list)
         return lap_list
     except ValueError as e:
         logger.error(f"ValueError loading laps for {year} R{round_num}: {e}")
@@ -124,8 +179,9 @@ def get_race_laps(year: int, round_num: int) -> list:
 def get_schedule(year: int) -> list:
     """Get the race schedule for a given year."""
     cache_key = f"schedule_{year}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
     
     try:
         schedule = fastf1.get_event_schedule(year)
@@ -149,7 +205,7 @@ def get_schedule(year: int) -> list:
         
         # Filter out testing events (round 0)
         events = [e for e in events if e["round"] > 0]
-        _results_cache[cache_key] = events
+        _set_cached(cache_key, events)
         return events
     except Exception as e:
         logger.error(f"Failed to get schedule for {year}: {e}")
@@ -159,8 +215,9 @@ def get_schedule(year: int) -> list:
 def get_driver_season_stats(year: int, driver: str) -> dict:
     """Get aggregated driver stats for a season with timeout protection."""
     cache_key = f"driver_stats_{year}_{driver}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
     
     try:
         schedule = fastf1.get_event_schedule(year)
@@ -229,7 +286,7 @@ def get_driver_season_stats(year: int, driver: str) -> dict:
             stats["avg_finish"] = round(sum(positions) / len(positions), 1)
         
         stats["points"] = round(stats["points"], 1)
-        _results_cache[cache_key] = stats
+        _set_cached(cache_key, stats)
         return stats
     except Exception as e:
         logger.error(f"Failed to get driver stats for {driver} in {year}: {e}")
@@ -239,8 +296,9 @@ def get_driver_season_stats(year: int, driver: str) -> dict:
 def list_drivers(year: int) -> list:
     """List all drivers for a given year."""
     cache_key = f"drivers_{year}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
     
     try:
         session = _load_session(year, 1)
@@ -258,7 +316,7 @@ def list_drivers(year: int) -> list:
                 "team": str(row.get("TeamName", "")),
             })
         
-        _results_cache[cache_key] = drivers
+        _set_cached(cache_key, drivers)
         return drivers
     except Exception as e:
         logger.error(f"Failed to list drivers for {year}: {e}")
@@ -268,8 +326,9 @@ def list_drivers(year: int) -> list:
 def get_tire_strategy(year: int, round_num: int) -> list:
     """Get tire strategy data for all drivers."""
     cache_key = f"strategy_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         session = _load_session(year, round_num)
@@ -309,7 +368,7 @@ def get_tire_strategy(year: int, round_num: int) -> list:
                 "stints": stints,
             })
 
-        _results_cache[cache_key] = strategies
+        _set_cached(cache_key, strategies)
         return strategies
     except Exception as e:
         logger.error(f"Failed to get tire strategy for {year} R{round_num}: {e}")
@@ -338,8 +397,9 @@ def get_track_coordinates(year: int, round_num: int) -> dict:
     Returns the circuit outline plus circuit info for proper visualization.
     """
     cache_key = f"track_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         session = _load_session_with_telemetry(year, round_num)
@@ -383,7 +443,7 @@ def get_track_coordinates(year: int, round_num: int) -> dict:
             "total_points": len(coords),
         }
 
-        _results_cache[cache_key] = result
+        _set_cached(cache_key, result)
         return result
     except Exception as e:
         logger.error(f"Failed to get track coordinates for {year} R{round_num}: {e}")
@@ -396,8 +456,9 @@ def get_driver_positions(year: int, round_num: int) -> dict:
     Returns sampled X/Y positions for each driver across all race laps.
     """
     cache_key = f"positions_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         session = _load_session_with_telemetry(year, round_num)
@@ -486,7 +547,7 @@ def get_driver_positions(year: int, round_num: int) -> dict:
             "drivers": driver_data,
         }
 
-        _results_cache[cache_key] = result
+        _set_cached(cache_key, result)
         return result
     except Exception as e:
         logger.error(f"Failed to get driver positions for {year} R{round_num}: {e}")
@@ -495,8 +556,9 @@ def get_driver_positions(year: int, round_num: int) -> dict:
 def get_qualifying_results(year: int, round_num: int) -> list:
     """Get qualifying results for a specific race."""
     cache_key = f"qualifying_{year}_{round_num}"
-    if cache_key in _results_cache:
-        return _results_cache[cache_key]
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         session = _load_session(year, round_num, "Q")
@@ -526,7 +588,7 @@ def get_qualifying_results(year: int, round_num: int) -> list:
                 "q3": q3,
             })
 
-        _results_cache[cache_key] = result_list
+        _set_cached(cache_key, result_list)
         return result_list
     except Exception as e:
         logger.error(f"Failed to get qualifying results for {year} R{round_num}: {e}")

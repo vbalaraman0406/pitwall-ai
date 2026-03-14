@@ -14,6 +14,50 @@ logger = logging.getLogger(__name__)
 # In-memory cache — only Gemini results (NOT heuristic) get cached
 _prediction_cache: Dict[str, Any] = {}
 
+# Disk-based prediction cache — survives cold starts
+PRED_CACHE_DIR = "/tmp/pitwall_pred_cache"
+try:
+    os.makedirs(PRED_CACHE_DIR, exist_ok=True)
+except Exception:
+    pass
+
+
+def _pred_disk_get(cache_key: str):
+    """Read prediction from disk cache."""
+    path = os.path.join(PRED_CACHE_DIR, f"{cache_key}.json")
+    try:
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                data = json.load(f)
+                _prediction_cache[cache_key] = data  # promote to memory
+                return data
+    except Exception:
+        pass
+    return None
+
+
+def _pred_disk_set(cache_key: str, data):
+    """Write prediction to disk cache."""
+    path = os.path.join(PRED_CACHE_DIR, f"{cache_key}.json")
+    try:
+        with open(path, "w") as f:
+            json.dump(data, f, separators=(",", ":"))
+    except Exception as e:
+        logger.warning(f"Failed to write prediction cache: {e}")
+
+
+def _pred_cache_get(cache_key: str):
+    """Multi-layer prediction cache read: memory → disk → None."""
+    if cache_key in _prediction_cache:
+        return _prediction_cache[cache_key]
+    return _pred_disk_get(cache_key)
+
+
+def _pred_cache_set(cache_key: str, data):
+    """Write to both memory and disk prediction cache."""
+    _prediction_cache[cache_key] = data
+    _pred_disk_set(cache_key, data)
+
 # ──────────────────────────── TEAM & DRIVER DATA ────────────────────────────
 
 # 2026 Car performance tiers — UPDATED after Round 1 (Australian GP, March 8 2026)
@@ -404,8 +448,9 @@ async def predict_race_llm(
     context_str = json.dumps(qualifying_data or []) + json.dumps(recent_results or [])
     cache_key = _get_cache_key(year, round_num, "race", hashlib.md5(context_str.encode()).hexdigest())
 
-    if cache_key in _prediction_cache:
-        return _prediction_cache[cache_key]
+    cached = _pred_cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if api_key:
@@ -420,7 +465,7 @@ async def predict_race_llm(
                 "key_factors": parsed.get("key_factors", []),
                 "upset_risk": parsed.get("upset_risk", ""),
             }
-            _prediction_cache[cache_key] = result  # Cache Gemini results
+            _pred_cache_set(cache_key, result)  # Cache Gemini results
             return result
         except Exception as e:
             logger.error(f"Gemini race prediction failed: {e}")
@@ -438,8 +483,9 @@ async def predict_qualifying_llm(
     context_str = json.dumps(recent_results or [])
     cache_key = _get_cache_key(year, round_num, "qualifying", hashlib.md5(context_str.encode()).hexdigest())
 
-    if cache_key in _prediction_cache:
-        return _prediction_cache[cache_key]
+    cached = _pred_cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if api_key:
@@ -455,7 +501,7 @@ async def predict_qualifying_llm(
                 "key_factors": parsed.get("key_factors", []),
                 "upset_risk": parsed.get("upset_risk", ""),
             }
-            _prediction_cache[cache_key] = result
+            _pred_cache_set(cache_key, result)
             return result
         except Exception as e:
             logger.error(f"Gemini qualifying prediction failed: {e}")
@@ -473,8 +519,9 @@ async def predict_sprint_llm(
     context_str = json.dumps(sprint_quali_data or []) + json.dumps(recent_results or [])
     cache_key = _get_cache_key(year, round_num, "sprint", hashlib.md5(context_str.encode()).hexdigest())
 
-    if cache_key in _prediction_cache:
-        return _prediction_cache[cache_key]
+    cached = _pred_cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if api_key:
@@ -490,7 +537,7 @@ async def predict_sprint_llm(
                 "key_factors": parsed.get("key_factors", []),
                 "upset_risk": parsed.get("upset_risk", ""),
             }
-            _prediction_cache[cache_key] = result
+            _pred_cache_set(cache_key, result)
             return result
         except Exception as e:
             logger.error(f"Gemini sprint prediction failed: {e}")
